@@ -30,7 +30,6 @@ public class JavafxApplication extends Application {
 		primaryStage.setTitle(TITLE);
 		primaryStage.getIcons().add(icon);
 		primaryStage.show();
-		primaryStage.setMaximized(true);
 	}
 
 	@Override

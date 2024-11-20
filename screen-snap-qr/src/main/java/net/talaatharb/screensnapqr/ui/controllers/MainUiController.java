@@ -3,6 +3,7 @@ package net.talaatharb.screensnapqr.ui.controllers;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,5 +24,15 @@ public class MainUiController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		log.info("Initializing UI application Main window controller...");
 
+	}
+	
+	@FXML
+	void newQRSnap() {
+		try {
+			var result = screenSnapQRFacade.getAllQRCodesFromScreen();
+			log.info(result.toString());
+		} catch (Exception e) {
+			log.error("Unable to take screen shot due to: {}", e.getMessage());
+		}
 	}
 }

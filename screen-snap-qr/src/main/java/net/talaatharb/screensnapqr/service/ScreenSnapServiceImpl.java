@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ScreenSnapServiceImpl implements ScreenSnapService {
 
+	@Override
 	public BufferedImage takeSnapshot() throws Exception {
 		Rectangle2D allScreenBounds = new Rectangle2D.Double();
 		GraphicsEnvironment localGE = GraphicsEnvironment.getLocalGraphicsEnvironment();
