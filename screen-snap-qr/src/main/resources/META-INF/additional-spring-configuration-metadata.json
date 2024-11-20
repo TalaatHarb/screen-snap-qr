@@ -1,0 +1,5 @@
+{"properties": [{
+  "name": "logging.level[net.talaatharb.copier]",
+  "type": "java.lang.String",
+  "description": "Logging level for the project"
+}]}
