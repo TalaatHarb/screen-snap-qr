@@ -51,8 +51,8 @@ public class QRServiceImpl implements QRService {
 			MultipleBarcodeReader reader = new GenericMultipleBarcodeReader(multiFormatReader);
 			results = reader.decodeMultiple(bitmap, hints);
 
-		} catch (NotFoundException ignored) {
-			log.warn("No barcode found");
+		} catch (NotFoundException e) {
+			log.warn("No barcode found, {}", e.getMessage());
 			return new Result[] {};
 		}
 

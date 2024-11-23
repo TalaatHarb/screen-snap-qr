@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 public class JavafxApplication extends Application {
 
 	public static final String CSS_FILE = "ui/theme.css";
-	private static final int HEIGHT = 600;
+	private static final int HEIGHT = 50;
 	private static final String MAIN_FXML = "ui/MainWindow.fxml";
 	private static final String ICON_FILE = "ui/logo.jpg";
 	private static final String TITLE = "ScreenSanpQR";
