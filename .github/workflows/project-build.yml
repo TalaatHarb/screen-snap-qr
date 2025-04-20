@@ -16,4 +16,4 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - run: cd screen-snap-qr && mvn compile verify package
+      - run: cd screen-snap-qr && mvn compile verify package -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dglass.platform=Monocle -Dmonocle.platform=Headless
