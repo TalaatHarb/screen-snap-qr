@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 public class ScreenSnapServiceImpl implements ScreenSnapService {
     
     private final GraphicsEnvironment graphicsEnvironment;
+    
+    private final Robot robot;
 
 	@Override
 	public BufferedImage takeSnapshot() throws Exception {
@@ -23,7 +25,6 @@ public class ScreenSnapServiceImpl implements ScreenSnapService {
 		  }
 		}
 
-		Robot robot = new Robot();
 		return robot.createScreenCapture(allScreenBounds.getBounds());
 	}
 
