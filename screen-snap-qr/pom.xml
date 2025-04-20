@@ -16,10 +16,12 @@
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 		<maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+		<maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
+		<maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
 		<maven-pmd-plugin.version>3.21.0</maven-pmd-plugin.version>
 		<maven-apache-plugins.version>3.11.0</maven-apache-plugins.version>
-		<maven-testing-plugins.version>3.5.0</maven-testing-plugins.version>
-		<maven-site-plugin.version>4.0.0-M8</maven-site-plugin.version>
+		<maven-testing-plugins.version>3.5.2</maven-testing-plugins.version>
+		<maven-site-plugin.version>4.0.0-M16</maven-site-plugin.version>
 		<!-- Essentials -->
 		<lombok.version>1.18.34</lombok.version>
 		<slf4j-simple.version>2.1.0-alpha1</slf4j-simple.version>
@@ -27,6 +29,7 @@
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 		<slf4jVersion>2.0.13</slf4jVersion>
+		<main.class>net.talaatharb.screensnapqr.ScreenSnapQRApplication</main.class>
 		<!-- Testing -->
 		<junit.version>5.11.0</junit.version>
 		<minimum-coverage-ratio>0.7</minimum-coverage-ratio>
@@ -49,6 +52,7 @@
 			<artifactId>lombok</artifactId>
 			<version>${lombok.version}</version>
 			<optional>true</optional>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
@@ -155,13 +159,67 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>${maven-jar-plugin.version}</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>
+								${main.class}
+							</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>${maven-assembly-plugin.version}</version>
+
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>${main.class}</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<appendAssemblyId>true</appendAssemblyId>
+				</configuration>
+
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${maven-testing-plugins.version}</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>${maven-site-plugin.version}</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>${maven-testing-plugins.version}</version>
+				<configuration>
+					<parallel>none</parallel>
+					<useUnlimitedThreads>false</useUnlimitedThreads>
+					<forkCount>1</forkCount>
+					<reuseForks>false</reuseForks>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
