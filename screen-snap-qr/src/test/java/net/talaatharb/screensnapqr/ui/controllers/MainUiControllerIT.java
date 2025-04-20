@@ -21,7 +21,7 @@ import javafx.stage.Stage;
 import net.talaatharb.screensnapqr.facade.ScreenSnapQRFacade;
 
 @ExtendWith(MockitoExtension.class)
-class MainUiControllerTest extends ApplicationTest {
+class MainUiControllerIT extends ApplicationTest {
 
     @InjectMocks
     MainUiController uiController;
