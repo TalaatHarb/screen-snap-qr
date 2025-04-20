@@ -1,5 +1,7 @@
 package net.talaatharb.screensnapqr.config;
 
+import java.awt.GraphicsEnvironment;
+
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -26,7 +28,7 @@ public class HelperBeans {
 	}
 
 	public static final ScreenSnapService buildScreenSnapService(){
-		return new ScreenSnapServiceImpl();
+		return new ScreenSnapServiceImpl(GraphicsEnvironment.getLocalGraphicsEnvironment());
 	}
 
 	public static final QRService buildQRService(){

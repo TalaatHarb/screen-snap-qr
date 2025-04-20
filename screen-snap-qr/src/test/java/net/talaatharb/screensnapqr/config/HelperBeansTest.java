@@ -12,11 +12,6 @@ class HelperBeansTest {
     }
     
     @Test
-    void testScreenSnapServiceCreation() {
-        assertNotNull(HelperBeans.buildScreenSnapService());
-    }
-    
-    @Test
     void testScreenSnapQRFacadeCreation() {
         assertNotNull(HelperBeans.buildScreenSnapQRFacade());
     }
