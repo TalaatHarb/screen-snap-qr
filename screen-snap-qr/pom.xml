@@ -29,7 +29,7 @@
 		<slf4jVersion>2.0.13</slf4jVersion>
 		<!-- Testing -->
 		<junit.version>5.11.0</junit.version>
-		<minimum-coverage-ratio>0.8</minimum-coverage-ratio>
+		<minimum-coverage-ratio>0.75</minimum-coverage-ratio>
 		<pitest.version>1.16.1</pitest.version>
 		<pitest-junit5-plugin.version>1.2.1</pitest-junit5-plugin.version>
 		<mockito.version>5.12.0</mockito.version>
@@ -244,6 +244,26 @@
 						<goals>
 							<goal>report-aggregate</goal>
 						</goals>
+					</execution>
+					<execution>
+						<id>jacoco-check</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>PACKAGE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${minimum-coverage-ratio}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
