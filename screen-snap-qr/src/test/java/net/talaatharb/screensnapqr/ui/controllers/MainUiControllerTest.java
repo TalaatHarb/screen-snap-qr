@@ -17,6 +17,7 @@ import javafx.application.Platform;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.stage.Stage;
 import net.talaatharb.screensnapqr.facade.ScreenSnapQRFacade;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +28,10 @@ class MainUiControllerTest extends ApplicationTest {
 
     @Mock
     ScreenSnapQRFacade screenSnapQRFacade;
+    
+    @Override
+    public void start(Stage stage) {
+    }
 
     @BeforeEach
     void initializeController() {
