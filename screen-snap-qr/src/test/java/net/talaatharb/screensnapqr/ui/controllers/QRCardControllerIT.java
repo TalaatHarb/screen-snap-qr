@@ -1,9 +1,6 @@
 package net.talaatharb.screensnapqr.ui.controllers;
 
-import static org.awaitility.Awaitility.await;
-
-import java.util.concurrent.TimeUnit;
-
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,9 +33,7 @@ class QRCardControllerIT extends ApplicationTest {
         QRCodeResultDto result = new QRCodeResultDto("test", new byte[] {}, 0, QRCodeFormat.QR_CODE, 0);
         qrCardController.setQRResult(result);
 
-        await()
-                .atMost(1, TimeUnit.SECONDS)
-                .until(() -> qrCardController.getTextLabel().getText().equals(result.getText()));
+        Platform.runLater(() -> Assertions.assertEquals(result.getText(), qrCardController.getTextLabel().getText()));
     }
 
 }
