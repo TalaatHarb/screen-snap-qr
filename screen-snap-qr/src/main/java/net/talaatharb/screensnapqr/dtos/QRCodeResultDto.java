@@ -9,12 +9,12 @@ import net.talaatharb.screensnapqr.constants.QRCodeMetadata;
 @Data
 public class QRCodeResultDto {
 
-	private final String text;
-	  private final byte[] rawBytes;
-	  private final int numBits;
-	  private QRResultPointDto[] resultPoints;
-	  private final QRCodeFormat format;
-	  private Map<QRCodeMetadata,Object> resultMetadata;
-	  private final long timestamp;
-	
+    private final String text;
+    private final byte[] rawBytes;
+    private final int numBits;
+    private QRResultPointDto[] resultPoints;
+    private final QRCodeFormat format;
+    private Map<QRCodeMetadata, Object> resultMetadata;
+    private final long timestamp;
+
 }

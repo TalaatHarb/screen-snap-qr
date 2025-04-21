@@ -1,16 +1,20 @@
 package net.talaatharb.screensnapqr.ui.controllers;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,6 +23,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.talaatharb.screensnapqr.config.HelperBeans;
 import net.talaatharb.screensnapqr.constants.ModeChoice;
+import net.talaatharb.screensnapqr.dtos.QRCodeResultDto;
 import net.talaatharb.screensnapqr.facade.ScreenSnapQRFacade;
 
 @Slf4j
@@ -41,6 +46,11 @@ public class MainUiController implements Initializable {
     @Setter(value = AccessLevel.PACKAGE)
     @FXML
     private Label delayLabel;
+
+    @Getter(value = AccessLevel.PACKAGE)
+    @Setter(value = AccessLevel.PACKAGE)
+    @FXML
+    private VBox qrCards;
 
     public MainUiController() {
         screenSnapQRFacade = HelperBeans.buildScreenSnapQRFacade();
@@ -96,6 +106,7 @@ public class MainUiController implements Initializable {
                         default:
                             var result = screenSnapQRFacade.getAllQRCodesFromScreen();
                             log.info(result.toString());
+                            result.forEach(this::loadQRCardResult);
                     }
                 } catch (Exception e) {
                     log.error("Unable to fetch QR codes from snap due to: {}", e.getMessage());
@@ -104,5 +115,19 @@ public class MainUiController implements Initializable {
             }, "QR-Capture").start();
         }, "Sleep-Thread").start();
 
+    }
+
+    private void loadQRCardResult(QRCodeResultDto r) {
+        Platform.runLater(() -> {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/net/talaatharb/screensnapqr/ui/QRCard.fxml"));
+            try {
+                Pane card = loader.load();
+                QRCardController controller = loader.getController();
+                controller.setQRResult(r);
+                qrCards.getChildren().add(card);
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
+        });
     }
 }

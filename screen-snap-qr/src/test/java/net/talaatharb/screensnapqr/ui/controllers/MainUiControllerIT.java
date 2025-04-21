@@ -2,7 +2,9 @@ package net.talaatharb.screensnapqr.ui.controllers;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +19,10 @@ import javafx.application.Platform;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import net.talaatharb.screensnapqr.constants.QRCodeFormat;
+import net.talaatharb.screensnapqr.dtos.QRCodeResultDto;
 import net.talaatharb.screensnapqr.facade.ScreenSnapQRFacade;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,7 +33,7 @@ class MainUiControllerIT extends ApplicationTest {
 
     @Mock
     ScreenSnapQRFacade screenSnapQRFacade;
-    
+
     @Override
     public void start(Stage stage) {
     }
@@ -39,13 +44,17 @@ class MainUiControllerIT extends ApplicationTest {
             uiController.setDelaySpinner(new Spinner<>());
             uiController.setDelayLabel(new Label());
             uiController.setModeChoiceBox(new ChoiceBox<>());
+            uiController.setQrCards(new VBox());
             uiController.initialize(null, null);
         });
     }
 
     @Test
-    void testNewQRSnap() {
+    void testNewQRSnap() throws Exception {
         final int delay = 2;
+        QRCodeResultDto result = new QRCodeResultDto("test", new byte[] {}, 0, QRCodeFormat.QR_CODE, 0);
+        when(screenSnapQRFacade.getAllQRCodesFromScreen())
+                .thenReturn(List.of(result));
 
         Platform.runLater(() -> uiController.getDelaySpinner().getValueFactory().setValue(delay));
         Platform.runLater(() -> uiController.newQRSnap());
