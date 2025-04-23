@@ -102,11 +102,14 @@ public class MainUiController implements Initializable {
             new Thread(() -> {
                 try {
                     switch (mode) {
-                        case SCREEN:
+                        case SELECTION, WINDOW, SCREEN:
                         default:
                             var result = screenSnapQRFacade.getAllQRCodesFromScreen();
                             log.info(result.toString());
-                            result.forEach(this::loadQRCardResult);
+                            Platform.runLater(() -> {
+                                qrCards.getChildren().clear();
+                                result.forEach(this::loadQRCardResult);
+                            });
                     }
                 } catch (Exception e) {
                     log.error("Unable to fetch QR codes from snap due to: {}", e.getMessage());
@@ -118,16 +121,14 @@ public class MainUiController implements Initializable {
     }
 
     private void loadQRCardResult(QRCodeResultDto r) {
-        Platform.runLater(() -> {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/net/talaatharb/screensnapqr/ui/QRCard.fxml"));
-            try {
-                Pane card = loader.load();
-                QRCardController controller = loader.getController();
-                controller.setQRResult(r);
-                qrCards.getChildren().add(card);
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
-        });
+        var loader = new FXMLLoader(getClass().getResource("/net/talaatharb/screensnapqr/ui/QRCard.fxml"));
+        try {
+            Pane card = loader.load();
+            QRCardController controller = loader.getController();
+            controller.setQRResult(r);
+            qrCards.getChildren().add(card);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
     }
 }

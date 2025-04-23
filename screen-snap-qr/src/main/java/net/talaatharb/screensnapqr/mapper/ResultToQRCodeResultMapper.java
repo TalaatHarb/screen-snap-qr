@@ -22,6 +22,7 @@ public interface ResultToQRCodeResultMapper {
 
 	@Mapping(source = "resultMetadata", target = "resultMetadata", qualifiedByName = "fromResultMetadata")
 	@Mapping(source = "barcodeFormat", target = "format", qualifiedByName = "fromFormat")
+	@Mapping(target = "qrCodeImage", ignore = true)
 	QRCodeResultDto fromResult(Result result);
 
 	default List<QRCodeResultDto> fromResultArray(Result[] results) {

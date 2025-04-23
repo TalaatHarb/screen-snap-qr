@@ -1,5 +1,6 @@
 package net.talaatharb.screensnapqr.dtos;
 
+import java.awt.image.BufferedImage;
 import java.util.Map;
 
 import lombok.Data;
@@ -16,5 +17,6 @@ public class QRCodeResultDto {
     private final QRCodeFormat format;
     private Map<QRCodeMetadata, Object> resultMetadata;
     private final long timestamp;
+    private BufferedImage qrCodeImage;
 
 }
