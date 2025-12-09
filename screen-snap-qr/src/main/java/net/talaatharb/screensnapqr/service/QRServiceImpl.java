@@ -70,7 +70,7 @@ public class QRServiceImpl implements QRService {
     
     private static final BufferedImage extractQRCodeRegion(QRResultPointDto[] points, BufferedImage sourceImage) {
         if (points == null || points.length < 3) {
-            throw new IllegalArgumentException("At least 3 ResultPoints are required for a QR Code.");
+            return null;
         }
 
         // Extract the three main points: top-left, top-right, bottom-left

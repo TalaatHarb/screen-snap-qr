@@ -30,7 +30,7 @@ public class QRCardController {
     @Setter(value = AccessLevel.PACKAGE)
     @FXML
     private Label rawBytesLabel;
-    
+
     @Getter(value = AccessLevel.PACKAGE)
     @Setter(value = AccessLevel.PACKAGE)
     @FXML
@@ -40,9 +40,14 @@ public class QRCardController {
         Platform.runLater(() -> {
             textLabel.setText(result.getText());
             formatLabel.setText(result.getFormat().toString());
-            rawBytesLabel.setText(Base64.getEncoder().encodeToString(result.getRawBytes()));
+            
+            byte[] rawBytes = result.getRawBytes();
+            if (rawBytes != null) {
+                rawBytesLabel.setText(Base64.getEncoder().encodeToString(rawBytes));
+            }
+            
             var qrCodeImage = result.getQrCodeImage();
-            if(qrCodeImage != null) {
+            if (qrCodeImage != null) {
                 qrCodeView.setImage(SwingFXUtils.toFXImage(qrCodeImage, null));
             }
         });
