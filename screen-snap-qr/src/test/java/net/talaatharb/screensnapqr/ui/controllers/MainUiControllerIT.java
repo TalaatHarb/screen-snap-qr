@@ -19,8 +19,7 @@ import javafx.application.Platform;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javafx.scene.layout.FlowPane;
 import net.talaatharb.screensnapqr.constants.QRCodeFormat;
 import net.talaatharb.screensnapqr.dtos.QRCodeResultDto;
 import net.talaatharb.screensnapqr.facade.ScreenSnapQRFacade;
@@ -34,17 +33,13 @@ class MainUiControllerIT extends ApplicationTest {
     @Mock
     ScreenSnapQRFacade screenSnapQRFacade;
 
-    @Override
-    public void start(Stage stage) {
-    }
-
     @BeforeEach
     void initializeController() {
         Platform.runLater(() -> {
             uiController.setDelaySpinner(new Spinner<>());
             uiController.setDelayLabel(new Label());
             uiController.setModeChoiceBox(new ChoiceBox<>());
-            uiController.setQrCards(new VBox());
+            uiController.setQrCards(new FlowPane());
             uiController.initialize(null, null);
         });
     }
