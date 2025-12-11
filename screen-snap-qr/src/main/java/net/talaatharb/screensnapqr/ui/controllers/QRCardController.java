@@ -7,6 +7,8 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -51,5 +53,25 @@ public class QRCardController {
                 qrCodeView.setImage(SwingFXUtils.toFXImage(qrCodeImage, null));
             }
         });
+    }
+
+    @FXML
+    public void copyText() {
+        String text = textLabel.getText();
+        if (text != null && !text.isEmpty()) {
+            ClipboardContent content = new ClipboardContent();
+            content.putString(text);
+            Clipboard.getSystemClipboard().setContent(content);
+        }
+    }
+
+    @FXML
+    public void copyRawBytes() {
+        String rawBytes = rawBytesLabel.getText();
+        if (rawBytes != null && !rawBytes.isEmpty()) {
+            ClipboardContent content = new ClipboardContent();
+            content.putString(rawBytes);
+            Clipboard.getSystemClipboard().setContent(content);
+        }
     }
 }
