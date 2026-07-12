@@ -2,6 +2,7 @@ package net.talaatharb.screensnapqr.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.awt.GraphicsConfiguration;
@@ -49,6 +50,19 @@ class ScreenSnapServiceImplTest {
 
         assertNotNull(result);
         assertThat(result.equals(image));
+    }
+
+    @Test
+    void testTakeSnapshotWithBounds() throws Exception {
+        var image = new BufferedImage(400, 300, ColorSpace.TYPE_RGB);
+        Rectangle selectedBounds = new Rectangle(10, 20, 400, 300);
+        when(robot.createScreenCapture(selectedBounds)).thenReturn(image);
+
+        var result = screenSnapService.takeSnapshot(selectedBounds);
+
+        assertNotNull(result);
+        assertThat(result.equals(image));
+        verify(robot).createScreenCapture(selectedBounds);
     }
 
 }

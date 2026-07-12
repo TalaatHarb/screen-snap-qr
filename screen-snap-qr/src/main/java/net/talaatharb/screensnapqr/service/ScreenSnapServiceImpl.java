@@ -3,6 +3,7 @@ package net.talaatharb.screensnapqr.service;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -25,7 +26,12 @@ public class ScreenSnapServiceImpl implements ScreenSnapService {
 		  }
 		}
 
-		return robot.createScreenCapture(allScreenBounds.getBounds());
+		return takeSnapshot(allScreenBounds.getBounds());
+	}
+
+	@Override
+	public BufferedImage takeSnapshot(Rectangle captureBounds) throws Exception {
+		return robot.createScreenCapture(captureBounds);
 	}
 
 }

@@ -1,5 +1,6 @@
 package net.talaatharb.screensnapqr.facade;
 
+import java.awt.Rectangle;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,12 @@ public class ScreenSnapQRFacadeImpl implements ScreenSnapQRFacade {
 	@Override
 	public List<QRCodeResultDto> getAllQRCodesFromScreen() throws Exception{
 		var image = screenSnapService.takeSnapshot();
+		return qrService.getAllQRCodeContents(image);
+	}
+
+	@Override
+	public List<QRCodeResultDto> getAllQRCodesFromScreen(Rectangle captureBounds) throws Exception {
+		var image = screenSnapService.takeSnapshot(captureBounds);
 		return qrService.getAllQRCodeContents(image);
 	}
 }

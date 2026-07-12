@@ -1,9 +1,14 @@
 # screen-snap-qr
 `screen-snap-qr` is a JavaFX desktop app that captures your screen, detects QR/Barcode/Data Matrix payloads, and presents their content in a readable, type-aware UI.
 
+## Screenshot
+
+![Application screenshot](img/Capture.PNG)
+
 ## Features
 
 - Capture and scan visible codes from the screen.
+- Capture modes: full **Screen**, **Selection** snip (with highlighted drag area), and focused **Window**.
 - Decode multiple formats via ZXing (including QR Code and Data Matrix).
 - Classify scanned payloads as:
   - Text
