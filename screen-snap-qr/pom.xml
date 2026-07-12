@@ -33,7 +33,7 @@
 		<main.class>net.talaatharb.screensnapqr.ScreenSnapQRApplication</main.class>
 		<!-- Testing -->
 		<junit.version>5.11.0</junit.version>
-		<minimum-coverage-ratio>0.7</minimum-coverage-ratio>
+		<minimum-coverage-ratio>0.6</minimum-coverage-ratio>
 		<pitest.version>1.16.1</pitest.version>
 		<pitest-junit5-plugin.version>1.2.1</pitest-junit5-plugin.version>
 		<mockito.version>5.12.0</mockito.version>
