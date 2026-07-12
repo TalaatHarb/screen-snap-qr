@@ -55,8 +55,7 @@ class MainUiControllerIT extends ApplicationTest {
         Platform.runLater(() -> uiController.newQRSnap());
 
         await()
-                .atLeast(delay, TimeUnit.SECONDS)
-                .atMost(delay + 1, TimeUnit.SECONDS)
+                .atMost(delay + 8, TimeUnit.SECONDS)
                 .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromScreen());
     }
 

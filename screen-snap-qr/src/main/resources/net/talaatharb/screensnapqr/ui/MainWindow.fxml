@@ -22,7 +22,7 @@
                   <Label text="Mode" />
                   <ChoiceBox fx:id="modeChoiceBox" prefWidth="150.0" />
                   <Separator orientation="VERTICAL" />
-                  <Label text="Dealy:" />
+                  <Label text="Delay:" />
                   <Spinner fx:id="delaySpinner" />
                   <Separator orientation="VERTICAL" />
                   <Label fx:id="delayLabel" maxWidth="30.0" prefHeight="30.0" style="-fx-border-radius: 50%; -fx-border-color: GRAY; -fx-padding: 10px;" text="00" visible="false" />
