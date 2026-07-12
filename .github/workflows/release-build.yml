@@ -1,0 +1,73 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build with Maven (Linux/macOS)
+        if: runner.os != 'Windows'
+        working-directory: screen-snap-qr
+        run: MAVEN_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED" mvn clean package -DskipTests
+
+      - name: Build with Maven (Windows)
+        if: runner.os == 'Windows'
+        working-directory: screen-snap-qr
+        shell: pwsh
+        run: |
+          $env:MAVEN_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
+          mvn clean package -DskipTests
+
+      - name: Rename JAR with release version (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          cd screen-snap-qr/target
+          ORIGINAL_JAR=$(ls screen-snap-qr-*-jar-with-dependencies.jar)
+          RENAMED_JAR="screen-snap-qr-${VERSION}-${{ runner.os }}.jar"
+          cp "$ORIGINAL_JAR" "$RENAMED_JAR"
+          echo "RENAMED_JAR_PATH=screen-snap-qr/target/$RENAMED_JAR" >> "$GITHUB_ENV"
+
+      - name: Rename JAR with release version (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = "${{ github.event.release.tag_name }}" -replace '^v',''
+          $originalJar = Get-ChildItem -Path "screen-snap-qr\target\screen-snap-qr-*-jar-with-dependencies.jar" | Select-Object -First 1
+          $renamedJar = "screen-snap-qr-$version-${{ runner.os }}.jar"
+          Copy-Item $originalJar.FullName -Destination "screen-snap-qr\target\$renamedJar"
+          "RENAMED_JAR_PATH=screen-snap-qr/target/$renamedJar" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Upload JAR to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          name: Release ${{ github.event.release.tag_name }}
+          body: |
+            This release was automatically generated from tag `${{ github.event.release.tag_name }}`.
+            - Built on `${{ runner.os }}`
+            - Includes the JAR file with dependencies.
+          files: ${{ env.RENAMED_JAR_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
