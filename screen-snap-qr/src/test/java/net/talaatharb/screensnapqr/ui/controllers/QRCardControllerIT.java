@@ -80,4 +80,27 @@ class QRCardControllerIT extends ApplicationTest {
         });
     }
 
+    @Test
+    void testOpenPrescriptionViewerWithMatchingSchema() {
+        final String prescriptionXml = "<P xmlns=\"http://www.cnas.ro/pel/1.0\" SC=\"AB\" SN=\"1234567\" PS=\"12345\" "
+                + "CC=\"999888\" CN=\"CT-01\" OU=\"CASMB\"><PD FN=\"Ion\" LN=\"Popescu\"/></P>";
+        net.talaatharb.screensnapqr.ui.content.ZipNode fileNode = new net.talaatharb.screensnapqr.ui.content.ZipNode(
+                "prescription.xml", false, null, "prescription.xml",
+                prescriptionXml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        interact(() -> {
+            Assertions.assertDoesNotThrow(() -> qrCardController.openPrescriptionViewer(fileNode));
+        });
+    }
+
+    @Test
+    void testOpenPrescriptionViewerWithNonMatchingContentDoesNothing() {
+        net.talaatharb.screensnapqr.ui.content.ZipNode fileNode = new net.talaatharb.screensnapqr.ui.content.ZipNode(
+                "test.json", false, null, "folder/test.json", "{\"key\":\"value\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        interact(() -> {
+            Assertions.assertDoesNotThrow(() -> qrCardController.openPrescriptionViewer(fileNode));
+        });
+    }
+
 }
