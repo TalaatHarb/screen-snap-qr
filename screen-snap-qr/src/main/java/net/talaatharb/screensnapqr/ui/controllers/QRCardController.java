@@ -26,7 +26,9 @@ import net.talaatharb.screensnapqr.ui.content.ContentToken;
 import net.talaatharb.screensnapqr.ui.content.ScannedContentAnalyzer;
 import net.talaatharb.screensnapqr.ui.content.ScannedContentViewModel;
 import net.talaatharb.screensnapqr.ui.content.ZipNode;
+import net.talaatharb.screensnapqr.ui.prescription.PrescriptionParser;
 import net.talaatharb.screensnapqr.ui.viewer.DocumentViewer;
+import net.talaatharb.screensnapqr.ui.viewer.PrescriptionViewer;
 
 public class QRCardController {
 
@@ -94,6 +96,13 @@ public class QRCardController {
                         final MenuItem viewItem = new MenuItem("View content");
                         viewItem.setOnAction(event -> openDocumentViewer(item));
                         contextMenu.getItems().add(viewItem);
+
+                        if (PrescriptionParser.tryParse(item.getTextContent()).isPresent()) {
+                            final MenuItem viewPrescriptionItem = new MenuItem("View prescription");
+                            viewPrescriptionItem.setOnAction(event -> openPrescriptionViewer(item));
+                            contextMenu.getItems().add(viewPrescriptionItem);
+                        }
+
                         setContextMenu(contextMenu);
                     } else {
                         setContextMenu(null);
@@ -116,6 +125,15 @@ public class QRCardController {
         if (node != null && !node.isDirectory()) {
             final String title = node.getPath() != null && !node.getPath().isBlank() ? node.getPath() : node.getLabel();
             DocumentViewer.show(title, node.getTextContent());
+        }
+    }
+
+    void openPrescriptionViewer(ZipNode node) {
+        if (node != null && !node.isDirectory()) {
+            PrescriptionParser.tryParse(node.getTextContent()).ifPresent(document -> {
+                final String title = node.getPath() != null && !node.getPath().isBlank() ? node.getPath() : node.getLabel();
+                PrescriptionViewer.show(title, document);
+            });
         }
     }
 
