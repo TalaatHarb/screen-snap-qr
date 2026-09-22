@@ -50,6 +50,33 @@
   - Copyable field values (individually, via selection, or all at once via
     **Copy all details**).
   - **Export...** to a plain-text report or JSON file for easy sharing.
+- Detect SMART Health Cards (`shc:/...` single-chunk QR/Data Matrix payloads: a
+  numerically-encoded compact JWS whose payload is a raw-deflate-compressed FHIR
+  `Bundle`) — either directly as the scanned payload (right-click on the
+  **Rendered** tab) or nested inside a ZIP entry (right-click on the ZIP tree) —
+  and offer a **"View health card"** option that opens a dedicated, resizable
+  **health card viewer** presenting the issuer/issued date/credential type header
+  plus a human-readable summary of each FHIR resource in the bundle (Patient,
+  Immunization — including CVX vaccine code lookup, Observation, Condition, with a
+  generic fallback for any other resource type).
+  - Responsive layout that reflows to the viewer window size.
+  - Copyable field values (individually, via selection, or all at once via
+    **Copy all details**).
+  - **Export...** to a plain-text report or JSON file for easy sharing.
+  - Note: only single-chunk health cards are supported; multi-chunk (`shc:/C/T/...`
+    with `T > 1`) cards spanning several barcodes are not currently combined.
+- Detect US DSCSA package identifiers (GS1 Application Identifier element strings
+  used by pharmaceutical serialization Data Matrix codes, in either bracketed
+  `(01)...(17)...(10)...(21)...` or raw GS-separated form) — either directly as the
+  scanned payload (right-click on the **Rendered** tab) or nested inside a ZIP entry
+  (right-click on the ZIP tree) — and offer a **"View DSCSA package"** option that
+  opens a dedicated, resizable **DSCSA package viewer** presenting the GTIN,
+  batch/lot number, production/expiration dates, and serial number with resolved
+  GS1 AI labels.
+  - Responsive layout that reflows to the viewer window size.
+  - Copyable field values (individually, via selection, or all at once via
+    **Copy all details**).
+  - **Export...** to a plain-text report or JSON file for easy sharing.
 
 ## Tech Stack
 
@@ -119,14 +146,19 @@ Planned implementation order:
    and visualizes UBL `Invoice`/`CreditNote` XML documents (seller/buyer parties,
    tax breakdown, line items, payment terms), the standard used across the EU for
    structured e-invoicing (including invoices referenced or embedded via QR code).
-2. **SMART Health Cards (SHC)** — decode the compressed, JWS-signed FHIR JSON
-   payload used for vaccination/lab-result health cards (`shc:/...` QR payloads),
-   verify/parse the JWS structure, and render the underlying FHIR
-   `Immunization`/`Observation`/`Patient` resources in a readable form.
-3. **US DSCSA (GS1 DataMatrix Application Identifiers)** — parse GS1 AI-encoded
-   Data Matrix payloads used for US Drug Supply Chain Security Act pharmaceutical
-   serialization (GTIN, batch/lot, expiry, serial number) and present them with
-   resolved AI labels, mirroring the EU FMD packaging use case.
+2. ~~**SMART Health Cards (SHC)**~~ — **Done.** Decodes the compressed, JWS-signed
+   FHIR JSON payload used for vaccination/lab-result health cards (`shc:/...` QR
+   payloads, single-chunk only) and renders the underlying FHIR
+   `Immunization`/`Observation`/`Patient`/`Condition` resources in a readable form.
+   JWS signature verification against the issuer's published key is not performed
+   (would require online JWKS resolution); only structural decoding/visualization.
+3. ~~**US DSCSA (GS1 DataMatrix Application Identifiers)**~~ — **Done.** Parses
+   GS1 AI-encoded Data Matrix payloads used for US Drug Supply Chain Security Act
+   pharmaceutical serialization (GTIN, batch/lot, expiry, serial number) and
+   presents them with resolved AI labels, mirroring the EU FMD packaging use case.
+   Supports both the human-readable bracketed `(AI)value` notation and the raw
+   GS1 element string form (GS-character-separated); only the five AIs relevant to
+   DSCSA (01, 10, 11, 17, 21) are recognized, not the full GS1 AI table.
 
 Further candidates to consider afterwards, roughly in order of expected value:
 

@@ -235,3 +235,93 @@
     -fx-border-radius: 3;
     -fx-background-radius: 3;
 }
+
+/* SMART Health Cards (SHC) visualization */
+.shc-view {
+    -fx-background-color: #ffffff;
+}
+
+.shc-scroll {
+    -fx-background-color: transparent;
+}
+
+.shc-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b3a70;
+}
+
+.shc-section > .title {
+    -fx-font-weight: bold;
+    -fx-background-color: #eef3fb;
+}
+
+.shc-grid {
+    -fx-padding: 6 4 6 4;
+}
+
+.shc-field-label {
+    -fx-text-fill: #5f6b7a;
+    -fx-font-weight: bold;
+}
+
+.shc-field-value {
+    -fx-text-fill: #232a33;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 2 4 2 4;
+    -fx-font-family: 'Courier New', monospace;
+}
+
+.shc-field-value:focused {
+    -fx-background-color: #eef3fb;
+    -fx-border-color: #b9cdf0;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+/* US DSCSA (GS1 DataMatrix) visualization */
+.dscsa-view {
+    -fx-background-color: #ffffff;
+}
+
+.dscsa-scroll {
+    -fx-background-color: transparent;
+}
+
+.dscsa-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1b3a70;
+}
+
+.dscsa-section > .title {
+    -fx-font-weight: bold;
+    -fx-background-color: #eef3fb;
+}
+
+.dscsa-grid {
+    -fx-padding: 6 4 6 4;
+}
+
+.dscsa-field-label {
+    -fx-text-fill: #5f6b7a;
+    -fx-font-weight: bold;
+}
+
+.dscsa-field-value {
+    -fx-text-fill: #232a33;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 2 4 2 4;
+    -fx-font-family: 'Courier New', monospace;
+}
+
+.dscsa-field-value:focused {
+    -fx-background-color: #eef3fb;
+    -fx-border-color: #b9cdf0;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}

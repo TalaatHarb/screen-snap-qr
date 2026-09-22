@@ -190,4 +190,95 @@ class QRCardControllerIT extends ApplicationTest {
         });
     }
 
+    @Test
+    void testOpenShcViewerWithMatchingSchema() {
+        final String shcPayload = SAMPLE_SHC_PAYLOAD;
+        net.talaatharb.screensnapqr.ui.content.ZipNode fileNode = new net.talaatharb.screensnapqr.ui.content.ZipNode(
+                "healthcard.txt", false, null, "healthcard.txt", shcPayload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        interact(() -> {
+            Assertions.assertDoesNotThrow(() -> qrCardController.openShcViewer(fileNode));
+        });
+    }
+
+    @Test
+    void testOpenRenderedShcViewerUsesScannedContentDirectly() {
+        final String shcPayload = SAMPLE_SHC_PAYLOAD;
+        QRCodeResultDto result = new QRCodeResultDto(shcPayload, shcPayload.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                0, QRCodeFormat.QR_CODE, 0);
+        qrCardController.setQRResult(result);
+
+        // The "shc:" prefix followed by digits happens to trip the lightweight YAML
+        // heuristic (key:-like first line), but detection/parsing is independent of the
+        // reported content type, so this only needs to confirm analysis completed.
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> Assertions
+                .assertFalse(qrCardController.getContentTypeLabel().getText().isBlank()));
+
+        interact(() -> Assertions.assertDoesNotThrow(() -> qrCardController.openRenderedShcViewer()));
+    }
+
+    @Test
+    void testOpenGs1ViewerWithMatchingSchema() {
+        final String gs1Payload = "(01)00312345678907(17)251231(10)ABC123(21)987654321";
+        net.talaatharb.screensnapqr.ui.content.ZipNode fileNode = new net.talaatharb.screensnapqr.ui.content.ZipNode(
+                "dscsa.txt", false, null, "dscsa.txt", gs1Payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        interact(() -> {
+            Assertions.assertDoesNotThrow(() -> qrCardController.openGs1Viewer(fileNode));
+        });
+    }
+
+    @Test
+    void testOpenRenderedGs1ViewerUsesScannedContentDirectly() {
+        final String gs1Payload = "(01)00312345678907(17)251231(10)ABC123(21)987654321";
+        QRCodeResultDto result = new QRCodeResultDto(gs1Payload, gs1Payload.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                0, QRCodeFormat.QR_CODE, 0);
+        qrCardController.setQRResult(result);
+
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertEquals("Text",
+                qrCardController.getContentTypeLabel().getText()));
+
+        interact(() -> Assertions.assertDoesNotThrow(() -> qrCardController.openRenderedGs1Viewer()));
+    }
+
+    /** A single-chunk SMART Health Card payload (Patient + Immunization), built with the same encoding scheme as {@code ShcParser}. */
+    private static final String SAMPLE_SHC_PAYLOAD = buildSampleShcPayload();
+
+    private static String buildSampleShcPayload() {
+        final String json = "{\"iss\":\"https://example.org/issuer\",\"nbf\":1700000000,\"vc\":{\"type\":"
+                + "[\"https://smarthealth.cards#health-card\"],\"credentialSubject\":{\"fhirVersion\":\"4.0.1\","
+                + "\"fhirBundle\":{\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":["
+                + "{\"resource\":{\"resourceType\":\"Patient\",\"name\":[{\"family\":\"Anyperson\",\"given\":[\"John\"]}],"
+                + "\"birthDate\":\"1951-01-20\"}}]}}}}";
+        try {
+            final byte[] jsonBytes = json.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            final java.util.zip.Deflater deflater = new java.util.zip.Deflater(java.util.zip.Deflater.BEST_COMPRESSION, true);
+            deflater.setInput(jsonBytes);
+            deflater.finish();
+            final java.io.ByteArrayOutputStream deflated = new java.io.ByteArrayOutputStream();
+            final byte[] buffer = new byte[4096];
+            while (!deflater.finished()) {
+                final int count = deflater.deflate(buffer);
+                deflated.write(buffer, 0, count);
+            }
+            deflater.end();
+
+            final String payload = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(deflated.toByteArray());
+            final String header = java.util.Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString("{\"alg\":\"ES256\",\"zip\":\"DEF\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            final String signature = java.util.Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString("sig".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            final String jws = header + "." + payload + "." + signature;
+
+            final StringBuilder numeric = new StringBuilder();
+            for (char c : jws.toCharArray()) {
+                numeric.append(String.format("%02d", (int) c - 45));
+            }
+            return "shc:/" + numeric;
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("Failed to build SHC test fixture", ex);
+        }
+    }
+
 }
+

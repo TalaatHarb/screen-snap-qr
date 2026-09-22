@@ -27,11 +27,15 @@ import net.talaatharb.screensnapqr.ui.content.ScannedContentAnalyzer;
 import net.talaatharb.screensnapqr.ui.content.ScannedContentType;
 import net.talaatharb.screensnapqr.ui.content.ScannedContentViewModel;
 import net.talaatharb.screensnapqr.ui.content.ZipNode;
+import net.talaatharb.screensnapqr.ui.dscsa.Gs1Parser;
 import net.talaatharb.screensnapqr.ui.einvoice.InvoiceParser;
 import net.talaatharb.screensnapqr.ui.prescription.PrescriptionParser;
+import net.talaatharb.screensnapqr.ui.shc.ShcParser;
 import net.talaatharb.screensnapqr.ui.viewer.DocumentViewer;
+import net.talaatharb.screensnapqr.ui.viewer.Gs1Viewer;
 import net.talaatharb.screensnapqr.ui.viewer.InvoiceViewer;
 import net.talaatharb.screensnapqr.ui.viewer.PrescriptionViewer;
+import net.talaatharb.screensnapqr.ui.viewer.ShcViewer;
 
 public class QRCardController {
 
@@ -115,6 +119,18 @@ public class QRCardController {
                             contextMenu.getItems().add(viewInvoiceItem);
                         }
 
+                        if (ShcParser.tryParse(item.getTextContent()).isPresent()) {
+                            final MenuItem viewShcItem = new MenuItem("View health card");
+                            viewShcItem.setOnAction(event -> openShcViewer(item));
+                            contextMenu.getItems().add(viewShcItem);
+                        }
+
+                        if (Gs1Parser.tryParse(item.getTextContent()).isPresent()) {
+                            final MenuItem viewGs1Item = new MenuItem("View DSCSA package");
+                            viewGs1Item.setOnAction(event -> openGs1Viewer(item));
+                            contextMenu.getItems().add(viewGs1Item);
+                        }
+
                         setContextMenu(contextMenu);
                     } else {
                         setContextMenu(null);
@@ -161,6 +177,18 @@ public class QRCardController {
                 contextMenu.getItems().add(viewInvoiceItem);
             }
 
+            if (ShcParser.tryParse(lastCopyableText).isPresent()) {
+                final MenuItem viewShcItem = new MenuItem("View health card");
+                viewShcItem.setOnAction(e -> openRenderedShcViewer());
+                contextMenu.getItems().add(viewShcItem);
+            }
+
+            if (Gs1Parser.tryParse(lastCopyableText).isPresent()) {
+                final MenuItem viewGs1Item = new MenuItem("View DSCSA package");
+                viewGs1Item.setOnAction(e -> openRenderedGs1Viewer());
+                contextMenu.getItems().add(viewGs1Item);
+            }
+
             contextMenu.show(contentFlow, event.getScreenX(), event.getScreenY());
         });
     }
@@ -194,6 +222,14 @@ public class QRCardController {
         InvoiceParser.tryParse(lastCopyableText).ifPresent(document -> InvoiceViewer.show("Scanned content", document));
     }
 
+    void openRenderedShcViewer() {
+        ShcParser.tryParse(lastCopyableText).ifPresent(document -> ShcViewer.show("Scanned content", document));
+    }
+
+    void openRenderedGs1Viewer() {
+        Gs1Parser.tryParse(lastCopyableText).ifPresent(document -> Gs1Viewer.show("Scanned content", document));
+    }
+
     void openDocumentViewer(ZipNode node) {
         if (node != null && !node.isDirectory()) {
             final String title = node.getPath() != null && !node.getPath().isBlank() ? node.getPath() : node.getLabel();
@@ -215,6 +251,24 @@ public class QRCardController {
             InvoiceParser.tryParse(node.getTextContent()).ifPresent(document -> {
                 final String title = node.getPath() != null && !node.getPath().isBlank() ? node.getPath() : node.getLabel();
                 InvoiceViewer.show(title, document);
+            });
+        }
+    }
+
+    void openShcViewer(ZipNode node) {
+        if (node != null && !node.isDirectory()) {
+            ShcParser.tryParse(node.getTextContent()).ifPresent(document -> {
+                final String title = node.getPath() != null && !node.getPath().isBlank() ? node.getPath() : node.getLabel();
+                ShcViewer.show(title, document);
+            });
+        }
+    }
+
+    void openGs1Viewer(ZipNode node) {
+        if (node != null && !node.isDirectory()) {
+            Gs1Parser.tryParse(node.getTextContent()).ifPresent(document -> {
+                final String title = node.getPath() != null && !node.getPath().isBlank() ? node.getPath() : node.getLabel();
+                Gs1Viewer.show(title, document);
             });
         }
     }
