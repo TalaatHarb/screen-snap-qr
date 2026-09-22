@@ -39,12 +39,21 @@ public class DocumentViewer {
 
     public DocumentViewer(String fileName, String content) {
         this.fileName = fileName != null ? fileName : "Untitled";
-        this.content = content != null ? content : "";
+        // RichTextFX's CodeArea splits paragraphs on \r\n|\r|\n and stores a single '\n'
+        // per line break internally, so a \r\n-based string (e.g. Jackson's pretty printer
+        // on Windows, which uses System.lineSeparator()) would end up one character shorter
+        // per line inside the CodeArea than the string used to compute highlighting offsets,
+        // progressively misaligning every style span after the first line break.
+        this.content = normalizeLineEndings(content != null ? content : "");
         this.codeArea = new CodeArea();
         this.scrollPane = new VirtualizedScrollPane<>(codeArea);
         this.root = new VBox();
 
         initializeUi();
+    }
+
+    private static String normalizeLineEndings(String text) {
+        return text.replace("\r\n", "\n").replace("\r", "\n");
     }
 
     private void initializeUi() {

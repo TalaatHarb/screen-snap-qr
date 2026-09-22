@@ -30,9 +30,22 @@
   opened via right-click ("View content") on a file node in the ZIP tree.
   - Syntax highlighting for **XML** and **JSON** content.
 - Detect Romanian e-prescription Data Matrix payloads (`PEBarcode.xsd` schema, root
-  `<P>`/`<O>` elements) inside ZIP entries and offer a right-click **"View prescription"**
-  option that opens a dedicated, resizable **prescription viewer** presenting the
-  decoded prescriber, patient, pharmacy, and medication data with human-readable labels.
+  `<P>`/`<O>` elements) — either directly as the scanned XML payload (right-click on
+  the **Rendered** tab) or nested inside a ZIP entry (right-click on the ZIP tree) —
+  and offer a **"View prescription"** option that opens a dedicated, resizable
+  **prescription viewer** presenting the decoded prescriber, patient, pharmacy, and
+  medication data with human-readable labels.
+  - Responsive layout that reflows to the viewer window size.
+  - Copyable field values (individually, via selection, or all at once via
+    **Copy all details**).
+  - **Export...** to a plain-text report or JSON file for easy sharing.
+- Detect EU e-invoicing Data Matrix/QR payloads (UBL 2.1 `Invoice`/`CreditNote` XML,
+  as profiled by Peppol BIS Billing 3.0) — either directly as the scanned XML payload
+  (right-click on the **Rendered** tab) or nested inside a ZIP entry (right-click on
+  the ZIP tree) — and offer a **"View e-invoice"** option that opens a dedicated,
+  resizable **invoice viewer** presenting the seller/buyer parties, payment means,
+  VAT breakdown, monetary totals, and invoice/credit-note lines with EN 16931
+  business-term (`BT-*`) human-readable labels.
   - Responsive layout that reflows to the viewer window size.
   - Copyable field values (individually, via selection, or all at once via
     **Copy all details**).
@@ -94,18 +107,18 @@ $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
 
 Many real-world QR / Data Matrix codes carry payloads that follow a well-known,
 publicly documented XML or JSON schema (in addition to the Romanian e-prescription
-schema already supported). The plan is to add a dedicated, dictionary-driven
-detector + viewer for each of these, following the same pattern established by the
-e-prescription viewer (schema detection → typed parser/model → human-readable,
-responsive, copyable/exportable viewer surfaced via the ZIP tree's right-click menu
-and/or directly on scanned results).
+and EU e-invoicing schemas already supported). The plan is to add a dedicated,
+dictionary-driven detector + viewer for each of these, following the same pattern
+established by the e-prescription and e-invoicing viewers (schema detection →
+typed parser/model → human-readable, responsive, copyable/exportable viewer
+surfaced via the ZIP tree's right-click menu and/or directly on scanned results).
 
 Planned implementation order:
 
-1. **EU e-invoicing (Peppol BIS Billing 3.0 / UBL 2.1 XML)** — detect and visualize
-   UBL `Invoice`/`CreditNote` XML documents (seller/buyer parties, tax breakdown,
-   line items, payment terms), the standard used across the EU for structured
-   e-invoicing (including invoices referenced or embedded via QR code).
+1. ~~**EU e-invoicing (Peppol BIS Billing 3.0 / UBL 2.1 XML)**~~ — **Done.** Detects
+   and visualizes UBL `Invoice`/`CreditNote` XML documents (seller/buyer parties,
+   tax breakdown, line items, payment terms), the standard used across the EU for
+   structured e-invoicing (including invoices referenced or embedded via QR code).
 2. **SMART Health Cards (SHC)** — decode the compressed, JWS-signed FHIR JSON
    payload used for vaccination/lab-result health cards (`shc:/...` QR payloads),
    verify/parse the JWS structure, and render the underlying FHIR

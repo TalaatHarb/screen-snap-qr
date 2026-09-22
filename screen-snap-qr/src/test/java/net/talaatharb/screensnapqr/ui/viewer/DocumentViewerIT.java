@@ -58,4 +58,31 @@ class DocumentViewerIT extends ApplicationTest {
         assertTrue(stage.isShowing());
         interact(stage::close);
     }
+
+    @Test
+    void testCrlfLineEndingsDoNotMisalignSyntaxHighlighting() {
+        // Jackson's DefaultPrettyPrinter writes System.lineSeparator() (\r\n on Windows). RichTextFX's
+        // CodeArea stores a single '\n' per line break internally, so without normalization the
+        // \r\n-based content would be one character longer per line than what the CodeArea actually
+        // stores, progressively shifting every style span after the first line break.
+        final String crlfJson = "{\r\n  \"first\" : \"alpha\",\r\n  \"second\" : \"beta\",\r\n  \"third\" : \"gamma\"\r\n}";
+
+        final AtomicReference<DocumentViewer> viewerRef = new AtomicReference<>();
+        interact(() -> viewerRef.set(new DocumentViewer("sample.json", crlfJson)));
+
+        final DocumentViewer viewer = viewerRef.get();
+        // Line endings must be normalized so the CodeArea's actual text length matches the
+        // string used to compute the highlighting offsets.
+        assertEquals(viewer.getContent().length(), viewer.getCodeArea().getLength());
+        assertFalse(viewer.getContent().contains("\r"));
+
+        final String normalizedContent = viewer.getContent();
+        final int thirdKeyStart = normalizedContent.indexOf("\"third\"");
+        final var styles = viewer.getCodeArea().getStyleSpans(thirdKeyStart, thirdKeyStart + "\"third\"".length())
+                .styleStream().toList();
+
+        assertTrue(styles.stream().allMatch(style -> style.contains("token-string")),
+                "Expected the 'third' key (on the last line) to be highlighted as a string, "
+                        + "not drift onto an unrelated character due to CRLF offset misalignment");
+    }
 }
