@@ -11,8 +11,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
 
+import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import net.talaatharb.screensnapqr.ui.prescription.PrescriptionDocument;
+import net.talaatharb.screensnapqr.ui.prescription.PrescriptionExporter;
 
 class PrescriptionViewerIT extends ApplicationTest {
 
@@ -62,5 +64,47 @@ class PrescriptionViewerIT extends ApplicationTest {
         assertNotNull(stage);
         assertTrue(stage.isShowing());
         interact(stage::close);
+    }
+
+    @Test
+    void testCopyAllDetailsPlacesPlainTextReportOnClipboard() {
+        AtomicReference<PrescriptionViewer> viewerRef = new AtomicReference<>();
+
+        interact(() -> {
+            PrescriptionViewer viewer = new PrescriptionViewer("prescription.xml", sampleDocument());
+            viewerRef.set(viewer);
+            viewer.createStage();
+
+            Button copyButton = findButton(viewer.getRoot(), "Copy all details");
+            assertNotNull(copyButton);
+            copyButton.fire();
+        });
+
+        final String expected = PrescriptionExporter.toPlainText(sampleDocument());
+        interact(() -> assertEquals(expected, javafx.scene.input.Clipboard.getSystemClipboard().getString()));
+    }
+
+    @Test
+    void testToolbarExposesExportButton() {
+        interact(() -> {
+            PrescriptionViewer viewer = new PrescriptionViewer("prescription.xml", sampleDocument());
+            viewer.createStage();
+            assertNotNull(findButton(viewer.getRoot(), "Export..."));
+        });
+    }
+
+    private static Button findButton(javafx.scene.Parent parent, String text) {
+        for (var child : parent.getChildrenUnmodifiable()) {
+            if (child instanceof Button button && text.equals(button.getText())) {
+                return button;
+            }
+            if (child instanceof javafx.scene.Parent childParent) {
+                Button found = findButton(childParent, text);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 }

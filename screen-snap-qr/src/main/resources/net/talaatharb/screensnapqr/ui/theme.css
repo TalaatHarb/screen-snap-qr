@@ -172,4 +172,16 @@
 
 .prescription-field-value {
     -fx-text-fill: #232a33;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 2 4 2 4;
+    -fx-font-family: 'Courier New', monospace;
+}
+
+.prescription-field-value:focused {
+    -fx-background-color: #eef3fb;
+    -fx-border-color: #b9cdf0;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
 }

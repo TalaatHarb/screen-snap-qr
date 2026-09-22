@@ -7,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -18,9 +19,14 @@ import net.talaatharb.screensnapqr.ui.prescription.PrescriptionFieldDictionary.C
 /**
  * Builds a human-readable JavaFX visualization of a parsed
  * {@link PrescriptionDocument}, resolving raw two-letter attribute codes to
- * their meaning via {@link PrescriptionFieldDictionary}.
+ * their meaning via {@link PrescriptionFieldDictionary}. The layout is
+ * responsive (sections and fields grow/shrink with the containing window) and
+ * field values are rendered as read-only, selectable/copyable text fields.
  */
 public final class PrescriptionView {
+
+    private static final double LABEL_COLUMN_PERCENT_WIDTH = 38;
+    private static final double VALUE_COLUMN_PERCENT_WIDTH = 62;
 
     private PrescriptionView() {
     }
@@ -29,6 +35,8 @@ public final class PrescriptionView {
         final VBox container = new VBox(10);
         container.getStyleClass().add("prescription-view");
         container.setPadding(new Insets(10));
+        container.setMaxWidth(Double.MAX_VALUE);
+        container.setFillWidth(true);
 
         final String kind = document.isOnline() ? "Online Prescription (<P>)" : "Offline Prescription (<O>)";
         final Label title = new Label(kind);
@@ -60,12 +68,22 @@ public final class PrescriptionView {
         final ScrollPane scrollPane = new ScrollPane(container);
         scrollPane.setFitToWidth(true);
         scrollPane.getStyleClass().add("prescription-scroll");
+
+        // Keep the container width in sync with the visible viewport so sections/fields
+        // reflow as the window is resized instead of staying at their initial width.
+        scrollPane.viewportBoundsProperty().addListener((observable, oldValue, bounds) -> {
+            final double width = bounds.getWidth() - container.getInsets().getLeft() - container.getInsets().getRight();
+            container.setPrefWidth(Math.max(0, width));
+        });
+
         return scrollPane;
     }
 
     private static TitledPane section(String title, Context context, Map<String, String> attributes) {
-        final TitledPane titledPane = new TitledPane(title, attributeGrid(context, attributes));
+        final GridPane grid = attributeGrid(context, attributes);
+        final TitledPane titledPane = new TitledPane(title, grid);
         titledPane.setCollapsible(false);
+        titledPane.setMaxWidth(Double.MAX_VALUE);
         titledPane.getStyleClass().add("prescription-section");
         return titledPane;
     }
@@ -73,28 +91,22 @@ public final class PrescriptionView {
     private static TitledPane medicationSection(String title, Context context, List<Map<String, String>> medications,
             String... titleAttributeCandidates) {
         final VBox medicationsBox = new VBox(8);
+        medicationsBox.setMaxWidth(Double.MAX_VALUE);
+        medicationsBox.setFillWidth(true);
         int index = 1;
         for (Map<String, String> medication : medications) {
-            final String label = titleFor(index, medication, titleAttributeCandidates);
+            final String label = PrescriptionFormatting.medicationTitle(index, medication, titleAttributeCandidates);
             final TitledPane medicationPane = new TitledPane(label, attributeGrid(context, medication));
+            medicationPane.setMaxWidth(Double.MAX_VALUE);
             medicationPane.getStyleClass().add("prescription-medication");
             medicationsBox.getChildren().add(medicationPane);
             index++;
         }
         final TitledPane titledPane = new TitledPane(title + " (" + medications.size() + ")", medicationsBox);
         titledPane.setCollapsible(false);
+        titledPane.setMaxWidth(Double.MAX_VALUE);
         titledPane.getStyleClass().add("prescription-section");
         return titledPane;
-    }
-
-    private static String titleFor(int index, Map<String, String> medication, String[] titleAttributeCandidates) {
-        for (String candidate : titleAttributeCandidates) {
-            final String value = medication.get(candidate);
-            if (value != null && !value.isBlank()) {
-                return "Medication " + index + " - " + value;
-            }
-        }
-        return "Medication " + index;
     }
 
     private static GridPane attributeGrid(Context context, Map<String, String> attributes) {
@@ -102,10 +114,12 @@ public final class PrescriptionView {
         grid.getStyleClass().add("prescription-grid");
         grid.setHgap(12);
         grid.setVgap(4);
+        grid.setMaxWidth(Double.MAX_VALUE);
 
         final ColumnConstraints labelColumn = new ColumnConstraints();
-        labelColumn.setMinWidth(220);
+        labelColumn.setPercentWidth(LABEL_COLUMN_PERCENT_WIDTH);
         final ColumnConstraints valueColumn = new ColumnConstraints();
+        valueColumn.setPercentWidth(VALUE_COLUMN_PERCENT_WIDTH);
         valueColumn.setHgrow(Priority.ALWAYS);
         grid.getColumnConstraints().addAll(labelColumn, valueColumn);
 
@@ -117,15 +131,26 @@ public final class PrescriptionView {
             final Label labelNode = new Label(label);
             labelNode.getStyleClass().add("prescription-field-label");
             labelNode.setWrapText(true);
+            labelNode.setMaxWidth(Double.MAX_VALUE);
 
-            final Label valueNode = new Label(value);
-            valueNode.getStyleClass().add("prescription-field-value");
-            valueNode.setWrapText(true);
-
-            grid.addRow(row, labelNode, valueNode);
+            grid.addRow(row, labelNode, valueField(value));
             row++;
         }
 
         return grid;
+    }
+
+    /**
+     * Renders a field value as a read-only {@link TextField} rather than a
+     * {@link Label} so the text can be selected and copied (Ctrl+C) directly
+     * from the view.
+     */
+    private static TextField valueField(String value) {
+        final TextField valueNode = new TextField(value != null ? value : "");
+        valueNode.setEditable(false);
+        valueNode.getStyleClass().add("prescription-field-value");
+        valueNode.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(valueNode, Priority.ALWAYS);
+        return valueNode;
     }
 }
