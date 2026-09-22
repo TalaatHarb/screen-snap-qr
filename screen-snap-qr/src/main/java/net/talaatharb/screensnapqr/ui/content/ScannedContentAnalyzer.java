@@ -286,14 +286,18 @@ public class ScannedContentAnalyzer {
     }
 
     private static ZipNode buildZipTree(byte[] zipBytes) {
-        final InternalZipNode root = new InternalZipNode("archive.zip", true);
+        final InternalZipNode root = new InternalZipNode("archive.zip", true, "", null);
 
         try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(zipBytes), StandardCharsets.UTF_8)) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 final String entryName = entry.getName().replace('\\', '/');
                 if (!entryName.isBlank()) {
-                    root.insert(entryName, entry.isDirectory());
+                    byte[] entryContent = null;
+                    if (!entry.isDirectory()) {
+                        entryContent = zipInputStream.readAllBytes();
+                    }
+                    root.insert(entryName, entry.isDirectory(), entryContent);
                 }
             }
         } catch (IOException ex) {
@@ -306,30 +310,46 @@ public class ScannedContentAnalyzer {
     private static final class InternalZipNode {
         private final String name;
         private final boolean directory;
+        private final String path;
+        private byte[] content;
         private final TreeMap<String, InternalZipNode> children = new TreeMap<>();
 
-        InternalZipNode(String name, boolean directory) {
+        InternalZipNode(String name, boolean directory, String path, byte[] content) {
             this.name = name;
             this.directory = directory;
+            this.path = path;
+            this.content = content;
         }
 
-        void insert(String entryName, boolean isDirectory) {
+        void insert(String entryName, boolean isDirectory, byte[] entryContent) {
             final String[] parts = entryName.split("/");
             InternalZipNode current = this;
+            final StringBuilder currentPath = new StringBuilder();
             for (int i = 0; i < parts.length; i++) {
                 final String part = parts[i];
                 if (part.isBlank()) {
                     continue;
                 }
+                if (currentPath.length() > 0) {
+                    currentPath.append('/');
+                }
+                currentPath.append(part);
                 final boolean nodeDirectory = i < parts.length - 1 || isDirectory;
-                current.children.putIfAbsent(part, new InternalZipNode(part, nodeDirectory));
-                current = current.children.get(part);
+                final byte[] nodeContent = (i == parts.length - 1 && !isDirectory) ? entryContent : null;
+
+                current.children.putIfAbsent(part,
+                        new InternalZipNode(part, nodeDirectory, currentPath.toString(), nodeContent));
+                final InternalZipNode child = current.children.get(part);
+                if (i == parts.length - 1 && !isDirectory && child.content == null) {
+                    child.content = entryContent;
+                }
+                current = child;
             }
         }
 
         ZipNode toZipNode() {
             final List<ZipNode> mappedChildren = children.values().stream().map(InternalZipNode::toZipNode).toList();
-            return new ZipNode(name, directory, mappedChildren);
+            return new ZipNode(name, directory, mappedChildren, path, content);
         }
     }
 }

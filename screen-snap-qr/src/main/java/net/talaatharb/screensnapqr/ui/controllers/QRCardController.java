@@ -6,8 +6,11 @@ import java.util.List;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.text.Text;
@@ -23,6 +26,7 @@ import net.talaatharb.screensnapqr.ui.content.ContentToken;
 import net.talaatharb.screensnapqr.ui.content.ScannedContentAnalyzer;
 import net.talaatharb.screensnapqr.ui.content.ScannedContentViewModel;
 import net.talaatharb.screensnapqr.ui.content.ZipNode;
+import net.talaatharb.screensnapqr.ui.viewer.DocumentViewer;
 
 public class QRCardController {
 
@@ -58,12 +62,62 @@ public class QRCardController {
     @Getter(value = AccessLevel.PACKAGE)
     @Setter(value = AccessLevel.PACKAGE)
     @FXML
-    private TreeView<String> zipTreeView;
+    private TreeView<ZipNode> zipTreeView;
 
     @Getter(value = AccessLevel.PACKAGE)
     @Setter(value = AccessLevel.PACKAGE)
     @FXML
     private Tab zipTab;
+
+    @FXML
+    public void initialize() {
+        setupZipTreeView();
+    }
+
+    private void setupZipTreeView() {
+        if (zipTreeView == null) {
+            return;
+        }
+
+        zipTreeView.setCellFactory(tv -> new TreeCell<>() {
+            @Override
+            protected void updateItem(ZipNode item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setContextMenu(null);
+                } else {
+                    setText(item.getLabel());
+                    if (!item.isDirectory()) {
+                        final ContextMenu contextMenu = new ContextMenu();
+                        final MenuItem viewItem = new MenuItem("View content");
+                        viewItem.setOnAction(event -> openDocumentViewer(item));
+                        contextMenu.getItems().add(viewItem);
+                        setContextMenu(contextMenu);
+                    } else {
+                        setContextMenu(null);
+                    }
+                }
+            }
+        });
+
+        zipTreeView.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2 && zipTreeView.getSelectionModel().getSelectedItem() != null) {
+                final TreeItem<ZipNode> selectedItem = zipTreeView.getSelectionModel().getSelectedItem();
+                if (selectedItem != null && selectedItem.getValue() != null && !selectedItem.getValue().isDirectory()) {
+                    openDocumentViewer(selectedItem.getValue());
+                }
+            }
+        });
+    }
+
+    void openDocumentViewer(ZipNode node) {
+        if (node != null && !node.isDirectory()) {
+            final String title = node.getPath() != null && !node.getPath().isBlank() ? node.getPath() : node.getLabel();
+            DocumentViewer.show(title, node.getTextContent());
+        }
+    }
 
     public void setQRResult(QRCodeResultDto result) {
         final ScannedContentViewModel contentModel = scannedContentAnalyzer.analyze(result);
@@ -104,13 +158,14 @@ public class QRCardController {
             return;
         }
 
+        setupZipTreeView();
         zipTab.setDisable(false);
         zipTreeView.setRoot(buildTreeItem(zipNode));
         zipTreeView.getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> buildTreeItem(ZipNode node) {
-        final TreeItem<String> treeItem = new TreeItem<>(node.getLabel());
+    private static TreeItem<ZipNode> buildTreeItem(ZipNode node) {
+        final TreeItem<ZipNode> treeItem = new TreeItem<>(node);
         node.getChildren().stream().map(QRCardController::buildTreeItem).forEach(treeItem.getChildren()::add);
         return treeItem;
     }

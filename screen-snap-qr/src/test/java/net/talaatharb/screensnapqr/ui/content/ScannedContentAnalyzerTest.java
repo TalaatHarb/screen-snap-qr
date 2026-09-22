@@ -69,6 +69,14 @@ class ScannedContentAnalyzerTest {
         assertEquals(ScannedContentType.ZIP, model.getContentType());
         assertNotNull(model.getZipNode());
         assertEquals("archive.zip", model.getZipNode().getLabel());
+        assertEquals(1, model.getZipNode().getChildren().size());
+        ZipNode docsDir = model.getZipNode().getChildren().get(0);
+        assertEquals("docs", docsDir.getLabel());
+        assertEquals(1, docsDir.getChildren().size());
+        ZipNode readmeFile = docsDir.getChildren().get(0);
+        assertEquals("readme.txt", readmeFile.getLabel());
+        assertEquals("docs/readme.txt", readmeFile.getPath());
+        assertEquals("hello", readmeFile.getTextContent());
     }
 
     @Test
