@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
@@ -52,6 +51,8 @@ public class QRServiceImpl implements QRService {
     private static final long MAX_PIXELS_FOR_UPSCALE = 2_000_000L;
     private static final int[] TILE_GRID_SIZES = { 2, 3, 4 };
     private static final double TILE_OVERLAP_RATIO = 0.15;
+    private static final float LOCATION_TOLERANCE_RATIO = 0.5F;
+    private static final float MIN_LOCATION_TOLERANCE_PX = 12F;
 
     private final ResultToQRCodeResultMapper mapper;
 
@@ -305,19 +306,60 @@ public class QRServiceImpl implements QRService {
         final String text = Objects.toString(result.getText(), "");
         final byte[] rawBytes = result.getRawBytes();
         final String rawKey = rawBytes == null ? "" : Base64.getEncoder().encodeToString(rawBytes);
-        final String pointsKey = buildPointsKey(result.getResultPoints());
+        final String locationKey = buildApproximateLocationKey(result.getResultPoints());
 
-        return String.join("|", format, text, rawKey, pointsKey);
+        return String.join("|", format, text, rawKey, locationKey);
     }
 
-    private static String buildPointsKey(ResultPoint[] points) {
-        if (points == null || points.length == 0) {
+    /**
+     * Builds a coarse, tolerant location key from a result's detection points.
+     * <p>
+     * The same physical code is frequently re-detected by several preprocessing
+     * variants (grayscale, Otsu binarization, upscaling, tiling, ...) with
+     * slightly different result-point coordinates due to rounding, rescaling and
+     * different binarizer anchor points. Keying deduplication on exact rounded
+     * pixel coordinates therefore produces many near-duplicate entries for the
+     * same code. Instead, this groups detections into a coordinate bucket sized
+     * relative to the detected code's own footprint, so results that land within
+     * roughly the same on-screen area are treated as the same code, while codes
+     * that are genuinely placed far apart remain distinct.
+     */
+    private static String buildApproximateLocationKey(ResultPoint[] points) {
+        final List<ResultPoint> validPoints = points == null ? List.of()
+                : Arrays.stream(points).filter(Objects::nonNull).toList();
+
+        if (validPoints.isEmpty()) {
             return "";
         }
 
-        return Arrays.stream(points).filter(Objects::nonNull)
-                .map(point -> String.format("%d,%d", Math.round(point.getX()), Math.round(point.getY())))
-                .collect(Collectors.joining(";"));
+        float minX = Float.MAX_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+        float sumX = 0F;
+        float sumY = 0F;
+
+        for (ResultPoint point : validPoints) {
+            final float x = point.getX();
+            final float y = point.getY();
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+            sumX += x;
+            sumY += y;
+        }
+
+        final float centroidX = sumX / validPoints.size();
+        final float centroidY = sumY / validPoints.size();
+
+        final float span = Math.max(maxX - minX, maxY - minY);
+        final float tolerance = Math.max(span * LOCATION_TOLERANCE_RATIO, MIN_LOCATION_TOLERANCE_PX);
+
+        final long bucketX = Math.round(centroidX / tolerance);
+        final long bucketY = Math.round(centroidY / tolerance);
+
+        return bucketX + "," + bucketY;
     }
 
     private static BufferedImage toGrayscale(BufferedImage sourceImage) {
