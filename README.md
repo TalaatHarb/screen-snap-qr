@@ -21,6 +21,22 @@
   - tokenized/highlighted view for structured text (JSON/XML/YAML)
   - dedicated ZIP tab with recursive archive tree
 - Copy decoded content and raw payload bytes.
+- Deduplicate repeated Data Matrix detections by content and approximate on-screen
+  location (tolerant of small coordinate differences across preprocessing passes),
+  instead of requiring an exact pixel match, while still keeping genuinely distinct
+  on-screen occurrences of the same code separate.
+- View the textual contents of any file inside a scanned ZIP archive in a standalone,
+  resizable **document viewer** (built on [RichTextFX](https://github.com/FXMisc/RichTextFX)),
+  opened via right-click ("View content") on a file node in the ZIP tree.
+  - Syntax highlighting for **XML** and **JSON** content.
+- Detect Romanian e-prescription Data Matrix payloads (`PEBarcode.xsd` schema, root
+  `<P>`/`<O>` elements) inside ZIP entries and offer a right-click **"View prescription"**
+  option that opens a dedicated, resizable **prescription viewer** presenting the
+  decoded prescriber, patient, pharmacy, and medication data with human-readable labels.
+  - Responsive layout that reflows to the viewer window size.
+  - Copyable field values (individually, via selection, or all at once via
+    **Copy all details**).
+  - **Export...** to a plain-text report or JSON file for easy sharing.
 
 ## Tech Stack
 
@@ -28,6 +44,7 @@
 - **JavaFX** for desktop UI
 - **ZXing** for barcode decoding
 - **Jackson** for JSON handling
+- **RichTextFX** for the syntax-highlighted document and prescription viewers
 - **JUnit 5 + TestFX + Mockito** for tests
 
 ## Requirements
@@ -72,6 +89,40 @@ $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
    - **Rendered** tab for readable content
    - **Raw** tab for Base64 payload bytes
    - **ZIP** tab (when applicable) for archive tree
+
+## Roadmap: Structured Schema Viewers
+
+Many real-world QR / Data Matrix codes carry payloads that follow a well-known,
+publicly documented XML or JSON schema (in addition to the Romanian e-prescription
+schema already supported). The plan is to add a dedicated, dictionary-driven
+detector + viewer for each of these, following the same pattern established by the
+e-prescription viewer (schema detection → typed parser/model → human-readable,
+responsive, copyable/exportable viewer surfaced via the ZIP tree's right-click menu
+and/or directly on scanned results).
+
+Planned implementation order:
+
+1. **EU e-invoicing (Peppol BIS Billing 3.0 / UBL 2.1 XML)** — detect and visualize
+   UBL `Invoice`/`CreditNote` XML documents (seller/buyer parties, tax breakdown,
+   line items, payment terms), the standard used across the EU for structured
+   e-invoicing (including invoices referenced or embedded via QR code).
+2. **SMART Health Cards (SHC)** — decode the compressed, JWS-signed FHIR JSON
+   payload used for vaccination/lab-result health cards (`shc:/...` QR payloads),
+   verify/parse the JWS structure, and render the underlying FHIR
+   `Immunization`/`Observation`/`Patient` resources in a readable form.
+3. **US DSCSA (GS1 DataMatrix Application Identifiers)** — parse GS1 AI-encoded
+   Data Matrix payloads used for US Drug Supply Chain Security Act pharmaceutical
+   serialization (GTIN, batch/lot, expiry, serial number) and present them with
+   resolved AI labels, mirroring the EU FMD packaging use case.
+
+Further candidates to consider afterwards, roughly in order of expected value:
+
+- **EU Digital COVID Certificate (HCERT)** — CBOR/JSON-schema-defined
+  vaccination/test/recovery certificate payload.
+- **India GSTN e-Invoice QR** — JSON payload with seller GSTIN, IRN, invoice value,
+  tax breakdown, and signed hash.
+- **Aadhaar Secure QR (India)** — signed XML payload with demographic data.
+- **DIVOC / W3C Verifiable Credentials** — JSON-LD vaccination/health certificates.
 
 ## Contributing
 
