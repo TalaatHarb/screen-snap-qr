@@ -80,7 +80,7 @@
 
 ## Tech Stack
 
-- **Java 21**
+- **Java 25**
 - **JavaFX** for desktop UI
 - **ZXing** for barcode decoding
 - **Jackson** for JSON handling
@@ -90,13 +90,13 @@
 
 ## Requirements
 
-- **Java 21+**
+- **Java 25+**
 - **Maven 3.x**
 
-On Windows, point Maven to JDK 21 before building:
+On Windows, point Maven to JDK 25 before building:
 
 ```powershell
-$env:JAVA_HOME="C:\Program Files\Java\jdk-21"
+$env:JAVA_HOME="C:\Program Files\Java\jdk-25"
 $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
 ```
 

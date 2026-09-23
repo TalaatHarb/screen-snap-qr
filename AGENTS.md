@@ -28,11 +28,28 @@ Always run Maven from `screen-snap-qr/screen-snap-qr/`.
   `target/screen-snap-qr-*-jar-with-dependencies.jar`)
 - Prefer `-o` (offline) once dependencies are resolved; only drop it if a new
   dependency/plugin needs to be downloaded.
-- JDK 21 is enforced by `maven-enforcer-plugin`; make sure `JAVA_HOME` points at
-  a JDK 21 install (see README "Requirements" section for the PowerShell snippet).
+- JDK 25 is enforced by `maven-enforcer-plugin`; make sure `JAVA_HOME` points at
+  a JDK 25 install (see README "Requirements" section for the PowerShell snippet).
 - PowerShell quirk: multi-value `-Dtest=A,B` arguments must be fully quoted,
   e.g. `mvn -o test "-Dtest=FooTest,BarTest"`, otherwise PowerShell's comma list
   splitting breaks the argument.
+- **JDK upgrade gotcha**: bumping `java.version`/`maven.compiler.*` to a new JDK
+  major version generally also requires bumping several toolchain dependencies
+  that hook into javac/bytecode internals, or the build breaks in confusing
+  ways. When this project moved from JDK 21 to JDK 25 the following all needed
+  version bumps (in addition to `javafx.version`, which must track the target
+  JDK's JavaFX release): `lombok.version` (annotation processor uses javac
+  internals — old versions throw `ExceptionInInitializerError` on newer javac),
+  `mockito.version` (bundles Byte Buddy, which must support the new class file
+  version or mocking throws `MockitoException`/`IncompatibleClassChangeError`),
+  `jacoco-maven-plugin.version` (must support the new class file version or
+  instrumentation throws `IllegalClassFormatException`), and
+  `richtextfx.version` (must not subclass any JavaFX control method that a
+  newer JavaFX release made `final`, or you get
+  `IncompatibleClassChangeError`). Always run a full `mvn verify` after a JDK
+  bump and read the *first* root-cause exception in any failure — these
+  version-mismatch errors look alarming but are almost always fixed by
+  bumping the one dependency named in the stack trace.
 
 ## Test coverage (JaCoCo)
 

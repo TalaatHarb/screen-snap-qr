@@ -12,9 +12,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<!-- JDK version -->
-		<java.version>21</java.version>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
+		<java.version>25</java.version>
+		<maven.compiler.source>25</maven.compiler.source>
+		<maven.compiler.target>25</maven.compiler.target>
 		<maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
 		<maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
 		<maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
@@ -24,7 +24,7 @@
 		<maven-site-plugin.version>4.0.0-M16</maven-site-plugin.version>
 		<maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
 		<!-- Essentials -->
-		<lombok.version>1.18.34</lombok.version>
+		<lombok.version>1.18.48</lombok.version>
 		<slf4j-simple.version>2.1.0-alpha1</slf4j-simple.version>
 		<jackson.version>2.18.0-rc1</jackson.version>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
@@ -37,16 +37,16 @@
 		<minimum-coverage-ratio>0.6</minimum-coverage-ratio>
 		<pitest.version>1.16.1</pitest.version>
 		<pitest-junit5-plugin.version>1.2.1</pitest-junit5-plugin.version>
-		<mockito.version>5.12.0</mockito.version>
+		<mockito.version>5.23.0</mockito.version>
 		<awaitility.version>4.3.0</awaitility.version>
 		<!-- Maven plugins -->
-		<jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
 		<dependency-check-maven.version>9.1.0</dependency-check-maven.version>
 		<maven-pmd-plugin.version>3.22.0</maven-pmd-plugin.version>
 		<!-- Java fx -->
-		<javafx.version>23-ea+27</javafx.version>
+		<javafx.version>25</javafx.version>
 		<javafx-maven-plugin.version>0.0.8</javafx-maven-plugin.version>
-		<richtextfx.version>0.11.4</richtextfx.version>
+		<richtextfx.version>0.11.7</richtextfx.version>
 		<testfx.version>4.0.18</testfx.version>
 		<monocole.version>21.0.2</monocole.version>
 	</properties>
@@ -255,8 +255,8 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<version>[21,22)</version>
-									<message>Use JDK 21 to build this project (set JAVA_HOME to your JDK 21 installation).</message>
+									<version>[25,26)</version>
+									<message>Use JDK 25 to build this project (set JAVA_HOME to your JDK 25 installation).</message>
 								</requireJavaVersion>
 							</rules>
 						</configuration>
