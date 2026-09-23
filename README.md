@@ -77,12 +77,18 @@
   - Copyable field values (individually, via selection, or all at once via
     **Copy all details**).
   - **Export...** to a plain-text report or JSON file for easy sharing.
+- Import and scan codes from external sources without taking a new screen capture:
+  - **Import Image**: Open and scan local image files (PNG, JPEG, GIF, BMP, WEBP).
+  - **Import PDF**: Open and scan multi-page PDF documents rendered at high DPI via Apache PDFBox.
+  - **From Clipboard (Ctrl+V)**: Paste images, file paths, or Base64 data URLs directly from system clipboard.
+  - **Drag and Drop**: Drag image or PDF files directly into the window.
 
 ## Tech Stack
 
 - **Java 25**
 - **JavaFX** for desktop UI
 - **ZXing** for barcode decoding
+- **Apache PDFBox** for PDF page rendering and scanning
 - **Jackson** for JSON handling
 - **RichTextFX** for the syntax-highlighted document and prescription viewers
 - **JUnit 5 + TestFX + Mockito** for tests
@@ -144,7 +150,30 @@ $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
    - **Raw** tab for Base64 payload bytes
    - **ZIP** tab (when applicable) for archive tree
 
-## Roadmap: Structured Schema Viewers
+## Future Work Map
+
+The next releases should improve the complete workflow around scanning—not only
+add more payload viewers. Priorities may change based on user feedback, but the
+features below are ordered so that each stage provides a useful foundation for
+the next one.
+
+| Stage | Feature | Intended outcome |
+| --- | --- | --- |
+| 1 | ~~**Import from image, clipboard, and PDF**~~ | **Done.** Decode codes from saved screenshots, pasted images/Base64/paths, drag-and-drop, and PDF pages without requiring a screen capture. |
+| 1 | **Scan history and favorites** | Keep an optional, searchable local history with timestamps, thumbnails, notes, favorites, re-open, and delete/clear controls. |
+| 1 | **Batch actions and export** | Copy or export all codes found in one capture as JSON, CSV, or plain text instead of handling each result separately. |
+| 2 | **Live region monitoring** | Watch a user-selected screen region and update results when its code changes, with pause and duplicate-suppression controls. |
+| 2 | **Multi-part payload assembly** | Combine structured-append QR codes and multi-chunk SMART Health Cards before classification and rendering. |
+| 2 | **Scan quality feedback** | Explain failed or low-confidence scans and suggest crop, scale, contrast, or rotation adjustments; optionally preview preprocessing attempts. |
+| 3 | **Trust and safety checks** | Verify supported signed payloads against trusted keys, display certificate/signature status, and warn before opening suspicious links. |
+| 3 | **Accessibility and localization** | Add full keyboard navigation, screen-reader labels, high-contrast support, adjustable text sizing, and translatable UI resources. |
+| 3 | **Extensible payload handlers** | Define a stable provider interface so new detectors, parsers, viewers, and exporters can be added without changing the core scanning flow. |
+
+All history and trust features should remain privacy-first: local by default,
+clearly indicate any network access, and provide explicit retention and deletion
+controls.
+
+### Structured Schema Viewers
 
 Many real-world QR / Data Matrix codes carry payloads that follow a well-known,
 publicly documented XML or JSON schema (in addition to the Romanian e-prescription

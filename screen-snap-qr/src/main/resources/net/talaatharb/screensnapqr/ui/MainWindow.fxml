@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.talaatharb.screensnapqr.ui.controllers.MainUiController">
+<AnchorPane fx:id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="850.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.talaatharb.screensnapqr.ui.controllers.MainUiController">
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -20,12 +20,16 @@
                 <Button mnemonicParsing="false" onAction="#newQRSnap" text="New snap" />
                   <Separator orientation="VERTICAL" />
                   <Label text="Mode" />
-                  <ChoiceBox fx:id="modeChoiceBox" prefWidth="150.0" />
+                  <ChoiceBox fx:id="modeChoiceBox" prefWidth="130.0" />
                   <Separator orientation="VERTICAL" />
                   <Label text="Delay:" />
-                  <Spinner fx:id="delaySpinner" />
+                  <Spinner fx:id="delaySpinner" prefWidth="80.0" />
                   <Separator orientation="VERTICAL" />
                   <Label fx:id="delayLabel" maxWidth="30.0" prefHeight="30.0" style="-fx-border-radius: 50%; -fx-border-color: GRAY; -fx-padding: 10px;" text="00" visible="false" />
+                  <Separator orientation="VERTICAL" />
+                  <Button fx:id="importImageButton" mnemonicParsing="false" onAction="#importImage" text="Import Image" />
+                  <Button fx:id="importPdfButton" mnemonicParsing="false" onAction="#importPdf" text="Import PDF" />
+                  <Button fx:id="clipboardButton" mnemonicParsing="false" onAction="#importFromClipboard" text="From Clipboard" />
               </items>
             </ToolBar>
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">

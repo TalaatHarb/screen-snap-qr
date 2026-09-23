@@ -41,9 +41,13 @@ class MainUiControllerIT extends ApplicationTest {
     @Mock
     CaptureBoundsProvider captureBoundsProvider;
 
+    @Mock
+    net.talaatharb.screensnapqr.ui.capture.FileChooserProvider fileChooserProvider;
+
     @BeforeEach
     void initializeController() {
         Platform.runLater(() -> {
+            uiController.setRootPane(new javafx.scene.layout.AnchorPane());
             uiController.setDelaySpinner(new Spinner<>());
             uiController.setDelayLabel(new Label());
             uiController.setModeChoiceBox(new ChoiceBox<>());
@@ -229,4 +233,84 @@ class MainUiControllerIT extends ApplicationTest {
         Platform.runLater(() -> stageRef.get().close());
     }
 
+    @Test
+    void testImportImageWithFileSelected() throws Exception {
+        java.io.File file = new java.io.File("sample.png");
+        when(fileChooserProvider.showOpenDialog(any(), any(), any(), any())).thenReturn(file);
+        QRCodeResultDto result = new QRCodeResultDto("image_qr", new byte[] {}, 0, QRCodeFormat.QR_CODE, 0);
+        when(screenSnapQRFacade.getAllQRCodesFromImageFile(file)).thenReturn(List.of(result));
+
+        Platform.runLater(() -> uiController.importImage());
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromImageFile(file));
+    }
+
+    @Test
+    void testImportImageWithNullFileDoesNothing() throws Exception {
+        when(fileChooserProvider.showOpenDialog(any(), any(), any(), any())).thenReturn(null);
+
+        Platform.runLater(() -> uiController.importImage());
+
+        verify(screenSnapQRFacade, never()).getAllQRCodesFromImageFile(any());
+    }
+
+    @Test
+    void testImportPdfWithFileSelected() throws Exception {
+        java.io.File file = new java.io.File("sample.pdf");
+        when(fileChooserProvider.showOpenDialog(any(), any(), any(), any())).thenReturn(file);
+        QRCodeResultDto result = new QRCodeResultDto("pdf_qr", new byte[] {}, 0, QRCodeFormat.QR_CODE, 0);
+        when(screenSnapQRFacade.getAllQRCodesFromPdfFile(file)).thenReturn(List.of(result));
+
+        Platform.runLater(() -> uiController.importPdf());
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromPdfFile(file));
+    }
+
+    @Test
+    void testImportPdfWithNullFileDoesNothing() throws Exception {
+        when(fileChooserProvider.showOpenDialog(any(), any(), any(), any())).thenReturn(null);
+
+        Platform.runLater(() -> uiController.importPdf());
+
+        verify(screenSnapQRFacade, never()).getAllQRCodesFromPdfFile(any());
+    }
+
+    @Test
+    void testImportFromClipboard() throws Exception {
+        QRCodeResultDto result = new QRCodeResultDto("clip_qr", new byte[] {}, 0, QRCodeFormat.QR_CODE, 0);
+        when(screenSnapQRFacade.getAllQRCodesFromClipboard()).thenReturn(List.of(result));
+
+        Platform.runLater(() -> uiController.importFromClipboard());
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromClipboard());
+    }
+
+    @Test
+    void testImportFromFileHandlesExceptionsGracefully() throws Exception {
+        java.io.File file = new java.io.File("bad.png");
+        when(screenSnapQRFacade.getAllQRCodesFromImageFile(file)).thenThrow(new RuntimeException("read failed"));
+
+        Platform.runLater(() -> uiController.importFromFile(file, false));
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromImageFile(file));
+    }
+
+    @Test
+    void testImportFromClipboardHandlesExceptionsGracefully() throws Exception {
+        when(screenSnapQRFacade.getAllQRCodesFromClipboard()).thenThrow(new RuntimeException("clip failed"));
+
+        Platform.runLater(() -> uiController.importFromClipboard());
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromClipboard());
+    }
+
+    @Test
+    void testSetupDragAndDropNullSafe() {
+        Assertions.assertDoesNotThrow(() -> uiController.setupDragAndDrop(null));
+    }
 }

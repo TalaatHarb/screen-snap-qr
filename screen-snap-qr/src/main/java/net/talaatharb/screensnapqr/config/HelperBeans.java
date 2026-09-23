@@ -49,7 +49,15 @@ public class HelperBeans {
 		return new QRServiceImpl(MapperBeans.getResultMapper());
 	}
 
+	public static final net.talaatharb.screensnapqr.service.ClipboardService buildClipboardService() {
+		return new net.talaatharb.screensnapqr.service.DefaultClipboardService();
+	}
+
+	public static final net.talaatharb.screensnapqr.service.ImportService buildImportService() {
+		return new net.talaatharb.screensnapqr.service.ImportServiceImpl(buildQRService(), buildClipboardService());
+	}
+
 	public static final ScreenSnapQRFacade buildScreenSnapQRFacade() {
-		return new ScreenSnapQRFacadeImpl(buildScreenSnapService(), buildQRService());
+		return new ScreenSnapQRFacadeImpl(buildScreenSnapService(), buildQRService(), buildImportService());
 	}
 }

@@ -16,4 +16,13 @@ class HelperBeansTest {
         assertNotNull(HelperBeans.buildScreenSnapQRFacade());
     }
 
+    @Test
+    void testClipboardServiceCreation() {
+        assertNotNull(HelperBeans.buildClipboardService());
+    }
+
+    @Test
+    void testImportServiceCreation() {
+        assertNotNull(HelperBeans.buildImportService());
+    }
 }

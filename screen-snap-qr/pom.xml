@@ -31,6 +31,7 @@
 		<lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 		<slf4jVersion>2.0.13</slf4jVersion>
 		<jna.version>5.14.0</jna.version>
+		<pdfbox.version>3.0.4</pdfbox.version>
 		<main.class>net.talaatharb.screensnapqr.ScreenSnapQRApplication</main.class>
 		<!-- Testing -->
 		<junit.version>5.11.0</junit.version>
@@ -107,6 +108,11 @@
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna-platform</artifactId>
 			<version>${jna.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>${pdfbox.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.testfx</groupId>
