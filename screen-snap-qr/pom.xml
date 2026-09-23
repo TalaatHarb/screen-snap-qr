@@ -45,6 +45,7 @@
 		<maven-pmd-plugin.version>3.22.0</maven-pmd-plugin.version>
 		<!-- Java fx -->
 		<javafx.version>23-ea+27</javafx.version>
+		<javafx-maven-plugin.version>0.0.8</javafx-maven-plugin.version>
 		<richtextfx.version>0.11.4</richtextfx.version>
 		<testfx.version>4.0.18</testfx.version>
 		<monocole.version>21.0.2</monocole.version>
@@ -176,6 +177,16 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<!-- Enables "mvn javafx:run" to launch the application directly, without
+				     packaging a jar or manually configuring the module path. -->
+				<groupId>org.openjfx</groupId>
+				<artifactId>javafx-maven-plugin</artifactId>
+				<version>${javafx-maven-plugin.version}</version>
+				<configuration>
+					<mainClass>${main.class}</mainClass>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>${maven-jar-plugin.version}</version>
@@ -222,6 +233,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${maven-testing-plugins.version}</version>
+				<configuration>
+					<argLine>@{surefireArgLine}</argLine>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -258,6 +272,7 @@
 					<useUnlimitedThreads>false</useUnlimitedThreads>
 					<forkCount>1</forkCount>
 					<reuseForks>false</reuseForks>
+					<argLine>@{failsafeArgLine}</argLine>
 				</configuration>
 				<executions>
 					<execution>
@@ -318,10 +333,29 @@
 					</excludes>
 				</configuration>
 				<executions>
+					<!-- Instruments unit tests (surefire), writing coverage data to jacoco.exec. -->
 					<execution>
+						<id>prepare-agent-unit</id>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
+						<configuration>
+							<destFile>${project.build.directory}/jacoco.exec</destFile>
+							<propertyName>surefireArgLine</propertyName>
+						</configuration>
+					</execution>
+					<!-- Instruments integration tests (failsafe), writing coverage data to jacoco-it.exec.
+					     Without this, *IT coverage is invisible to the checks below, since surefire and
+					     failsafe are instrumented independently. -->
+					<execution>
+						<id>prepare-agent-integration</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+						<configuration>
+							<destFile>${project.build.directory}/jacoco-it.exec</destFile>
+							<propertyName>failsafeArgLine</propertyName>
+						</configuration>
 					</execution>
 					<execution>
 						<id>report</id>
@@ -330,24 +364,56 @@
 							<goal>report</goal>
 						</goals>
 						<configuration>
+							<dataFile>${project.build.directory}/jacoco.exec</dataFile>
 							<formats>
 								<format>XML</format>
 							</formats>
 						</configuration>
 					</execution>
+					<!-- Combines unit + integration test coverage data so the check below reflects
+					     real coverage, since a lot of UI code is only exercised by *IT tests. -->
 					<execution>
-						<id>report-aggregate</id>
+						<id>merge-results</id>
 						<phase>verify</phase>
 						<goals>
-							<goal>report-aggregate</goal>
+							<goal>merge</goal>
 						</goals>
+						<configuration>
+							<fileSets>
+								<fileSet>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>jacoco.exec</include>
+										<include>jacoco-it.exec</include>
+									</includes>
+								</fileSet>
+							</fileSets>
+							<destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>report-merged</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+							<outputDirectory>${project.build.directory}/site/jacoco-merged</outputDirectory>
+							<formats>
+								<format>HTML</format>
+								<format>XML</format>
+							</formats>
+						</configuration>
 					</execution>
 					<execution>
 						<id>jacoco-check</id>
+						<phase>verify</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
 						<configuration>
+							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
 							<rules>
 								<rule>
 									<element>PACKAGE</element>

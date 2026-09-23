@@ -241,6 +241,113 @@ class QRCardControllerIT extends ApplicationTest {
         interact(() -> Assertions.assertDoesNotThrow(() -> qrCardController.openRenderedGs1Viewer()));
     }
 
+    @Test
+    void testZipTreeCellFactoryBuildsSchemaAwareContextMenus() throws Exception {
+        final String prescriptionXml = "<P xmlns=\"http://www.cnas.ro/pel/1.0\" SC=\"AB\" SN=\"1234567\" PS=\"12345\" "
+                + "CC=\"999888\" CN=\"CT-01\" OU=\"CASMB\"><PD FN=\"Ion\" LN=\"Popescu\"/></P>";
+
+        final java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(output)) {
+            zos.putNextEntry(new java.util.zip.ZipEntry("folder/prescription.xml"));
+            zos.write(prescriptionXml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            zos.closeEntry();
+            zos.putNextEntry(new java.util.zip.ZipEntry("plain.txt"));
+            zos.write("hello world".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            zos.closeEntry();
+            zos.finish();
+        }
+        final QRCodeResultDto result = new QRCodeResultDto("binary", output.toByteArray(), 0, QRCodeFormat.QR_CODE, 0);
+
+        final java.util.concurrent.atomic.AtomicReference<javafx.stage.Stage> stageRef = new java.util.concurrent.atomic.AtomicReference<>();
+        interact(() -> {
+            qrCardController.setQRResult(result);
+            final javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setScene(new javafx.scene.Scene(qrCardController.getZipTreeView(), 400, 300));
+            stage.show();
+            stageRef.set(stage);
+        });
+
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertNotNull(qrCardController.getZipTreeView().getRoot()));
+
+        interact(() -> {
+            qrCardController.getZipTreeView().getRoot().setExpanded(true);
+            qrCardController.getZipTreeView().getRoot().getChildren()
+                    .forEach(child -> child.setExpanded(true));
+        });
+
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> Assertions
+                .assertFalse(qrCardController.getZipTreeView().lookupAll(".tree-cell").isEmpty()));
+
+        final java.util.function.Function<String, javafx.scene.control.TreeCell<?>> findCellByText = text -> qrCardController
+                .getZipTreeView().lookupAll(".tree-cell").stream()
+                .map(javafx.scene.control.TreeCell.class::cast)
+                .filter(cell -> text.equals(cell.getText()))
+                .findFirst().orElse(null);
+
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertNotNull(findCellByText.apply("prescription.xml")));
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertNotNull(findCellByText.apply("plain.txt")));
+
+        interact(() -> {
+            final javafx.scene.control.TreeCell<?> prescriptionCell = findCellByText.apply("prescription.xml");
+            Assertions.assertNotNull(prescriptionCell.getContextMenu());
+            final java.util.List<String> prescriptionMenuTexts = prescriptionCell.getContextMenu().getItems().stream()
+                    .map(javafx.scene.control.MenuItem::getText).toList();
+            Assertions.assertTrue(prescriptionMenuTexts.contains("View content"));
+            Assertions.assertTrue(prescriptionMenuTexts.contains("View prescription"));
+
+            final javafx.scene.control.TreeCell<?> plainCell = findCellByText.apply("plain.txt");
+            Assertions.assertNotNull(plainCell.getContextMenu());
+            final java.util.List<String> plainMenuTexts = plainCell.getContextMenu().getItems().stream()
+                    .map(javafx.scene.control.MenuItem::getText).toList();
+            Assertions.assertTrue(plainMenuTexts.contains("View content"));
+            Assertions.assertFalse(plainMenuTexts.contains("View prescription"));
+
+            final javafx.scene.control.TreeCell<?> folderCell = findCellByText.apply("folder");
+            Assertions.assertNotNull(folderCell);
+            Assertions.assertNull(folderCell.getContextMenu());
+
+            stageRef.get().close();
+        });
+    }
+
+    @Test
+    void testZipTreeViewDoubleClickOpensDocumentViewer() throws Exception {
+        final java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(output)) {
+            zos.putNextEntry(new java.util.zip.ZipEntry("plain.txt"));
+            zos.write("hello world".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            zos.closeEntry();
+            zos.finish();
+        }
+        final QRCodeResultDto result = new QRCodeResultDto("binary", output.toByteArray(), 0, QRCodeFormat.QR_CODE, 0);
+
+        final java.util.concurrent.atomic.AtomicReference<javafx.stage.Stage> stageRef = new java.util.concurrent.atomic.AtomicReference<>();
+        interact(() -> {
+            qrCardController.setQRResult(result);
+            final javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setScene(new javafx.scene.Scene(qrCardController.getZipTreeView(), 400, 300));
+            stage.show();
+            stageRef.set(stage);
+        });
+
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertNotNull(qrCardController.getZipTreeView().getRoot()));
+
+        interact(() -> {
+            qrCardController.getZipTreeView().getRoot().setExpanded(true);
+            qrCardController.getZipTreeView().getSelectionModel().select(qrCardController.getZipTreeView().getRoot().getChildren().get(0));
+        });
+
+        // Simulate the mouse-click handler directly (clickCount == 2) rather than relying on a real
+        // OS-level double click, which is timing sensitive across environments.
+        interact(() -> {
+            final javafx.scene.input.MouseEvent doubleClick = new javafx.scene.input.MouseEvent(
+                    javafx.scene.input.MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, javafx.scene.input.MouseButton.PRIMARY, 2,
+                    false, false, false, false, true, false, false, true, false, false, null);
+            Assertions.assertDoesNotThrow(() -> qrCardController.getZipTreeView().getOnMouseClicked().handle(doubleClick));
+            stageRef.get().close();
+        });
+    }
+
     /** A single-chunk SMART Health Card payload (Patient + Immunization), built with the same encoding scheme as {@code ShcParser}. */
     private static final String SAMPLE_SHC_PAYLOAD = buildSampleShcPayload();
 

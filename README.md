@@ -86,6 +86,7 @@
 - **Jackson** for JSON handling
 - **RichTextFX** for the syntax-highlighted document and prescription viewers
 - **JUnit 5 + TestFX + Mockito** for tests
+- **JaCoCo** for test coverage reporting/enforcement (unit + integration tests merged)
 
 ## Requirements
 
@@ -117,6 +118,19 @@ $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
    ```bash
    mvn javafx:run
    ```
+
+## Testing and Code Coverage
+
+- Run unit tests only: `mvn test`
+- Run the full unit + integration test + coverage verification pipeline: `mvn verify`
+- JaCoCo instruments both unit tests (Surefire, `target/jacoco.exec`) and integration
+  tests (Failsafe, `*IT` classes, `target/jacoco-it.exec`) separately, then merges
+  them (`target/jacoco-merged.exec`) before generating the coverage report
+  (`target/site/jacoco-merged`) and enforcing a minimum **60% line coverage per
+  package** (`mvn verify` fails the build if any package falls below this). This
+  merge step matters because a large portion of the JavaFX UI code (controllers,
+  cell factories, capture overlays) is only exercised by `*IT` TestFX tests, not
+  plain unit tests.
 
 ## Usage
 

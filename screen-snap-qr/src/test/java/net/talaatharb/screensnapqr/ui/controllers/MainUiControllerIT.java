@@ -10,6 +10,7 @@ import java.awt.Rectangle;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +50,7 @@ class MainUiControllerIT extends ApplicationTest {
             uiController.setQrCards(new FlowPane());
             uiController.initialize(null, null);
         });
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertNotNull(uiController.getModeChoiceBox()));
     }
 
     @Test
@@ -87,6 +89,144 @@ class MainUiControllerIT extends ApplicationTest {
                 .atMost(8, TimeUnit.SECONDS)
                 .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromScreen());
         verify(screenSnapQRFacade, never()).getAllQRCodesFromScreen(bounds);
+    }
+
+    @Test
+    void testNoArgConstructorBuildsRealDependencies() {
+        // The no-arg constructor (used by the FXMLLoader in the real app, unlike the
+        // all-args constructor Mockito's @InjectMocks picks) is otherwise never exercised.
+        Assertions.assertDoesNotThrow(() -> new MainUiController());
+    }
+
+    @Test
+    void testModeChoiceStringConverterConvertsBothWays() {
+        final javafx.util.StringConverter<net.talaatharb.screensnapqr.constants.ModeChoice> converter = uiController
+                .getModeChoiceBox().getConverter();
+
+        Assertions.assertNull(converter.toString(null));
+        Assertions.assertEquals("Selection", converter.toString(net.talaatharb.screensnapqr.constants.ModeChoice.SELECTION));
+        Assertions.assertEquals(net.talaatharb.screensnapqr.constants.ModeChoice.WINDOW, converter.fromString("Focused Window"));
+        // Unrecognized text falls back to SCREEN.
+        Assertions.assertEquals(net.talaatharb.screensnapqr.constants.ModeChoice.SCREEN, converter.fromString("does-not-exist"));
+    }
+
+    @Test
+    void testNewQRSnapSelectionModeWithNullBoundsSkipsCapture() throws Exception {
+        when(captureBoundsProvider.resolveBounds(any())).thenReturn(null);
+
+        Platform.runLater(() -> {
+            uiController.getDelaySpinner().getValueFactory().setValue(0);
+            uiController.getModeChoiceBox().setValue(net.talaatharb.screensnapqr.constants.ModeChoice.SELECTION);
+            uiController.newQRSnap();
+        });
+
+        await()
+                .atMost(8, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(captureBoundsProvider).resolveBounds(net.talaatharb.screensnapqr.constants.ModeChoice.SELECTION));
+        verify(screenSnapQRFacade, never()).getAllQRCodesFromScreen();
+        verify(screenSnapQRFacade, never()).getAllQRCodesFromScreen(any());
+    }
+
+    @Test
+    void testNewQRSnapWindowModeWithNullBoundsSkipsCapture() throws Exception {
+        when(captureBoundsProvider.resolveBounds(any())).thenReturn(null);
+
+        Platform.runLater(() -> {
+            uiController.getDelaySpinner().getValueFactory().setValue(0);
+            uiController.getModeChoiceBox().setValue(net.talaatharb.screensnapqr.constants.ModeChoice.WINDOW);
+            uiController.newQRSnap();
+        });
+
+        await()
+                .atMost(8, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(captureBoundsProvider).resolveBounds(net.talaatharb.screensnapqr.constants.ModeChoice.WINDOW));
+        verify(screenSnapQRFacade, never()).getAllQRCodesFromScreen();
+        verify(screenSnapQRFacade, never()).getAllQRCodesFromScreen(any());
+    }
+
+    @Test
+    void testNewQRSnapWindowModeWithBoundsCallsFacadeWithBounds() throws Exception {
+        Rectangle bounds = new Rectangle(5, 5, 50, 50);
+        when(captureBoundsProvider.resolveBounds(any())).thenReturn(bounds);
+        when(screenSnapQRFacade.getAllQRCodesFromScreen(bounds)).thenReturn(List.of());
+
+        Platform.runLater(() -> {
+            uiController.getDelaySpinner().getValueFactory().setValue(0);
+            uiController.getModeChoiceBox().setValue(net.talaatharb.screensnapqr.constants.ModeChoice.WINDOW);
+            uiController.newQRSnap();
+        });
+
+        await()
+                .atMost(8, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromScreen(bounds));
+    }
+
+    @Test
+    void testNewQRSnapFiltersOutResultsWithoutResultPoints() throws Exception {
+        Rectangle bounds = new Rectangle(20, 30, 200, 150);
+        // No result points set (defaults to null), so the selection-bounds filter should
+        // discard this result instead of matching it.
+        QRCodeResultDto result = new QRCodeResultDto("test", new byte[] {}, 0, QRCodeFormat.QR_CODE, 0);
+        when(captureBoundsProvider.resolveBounds(any())).thenReturn(bounds);
+        when(screenSnapQRFacade.getAllQRCodesFromScreen()).thenReturn(List.of(result));
+
+        Platform.runLater(() -> {
+            uiController.getDelaySpinner().getValueFactory().setValue(0);
+            uiController.getModeChoiceBox().setValue(net.talaatharb.screensnapqr.constants.ModeChoice.SELECTION);
+            uiController.newQRSnap();
+        });
+
+        await()
+                .atMost(8, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromScreen());
+        await().atMost(2, TimeUnit.SECONDS)
+                .untilAsserted(() -> Assertions.assertTrue(uiController.getQrCards().getChildren().isEmpty()));
+    }
+
+    @Test
+    void testNewQRSnapLogsAndRecoversWhenFacadeThrows() throws Exception {
+        when(captureBoundsProvider.resolveBounds(any())).thenReturn(null);
+        when(screenSnapQRFacade.getAllQRCodesFromScreen()).thenThrow(new RuntimeException("capture failed"));
+
+        Platform.runLater(() -> {
+            uiController.getDelaySpinner().getValueFactory().setValue(0);
+            uiController.getModeChoiceBox().setValue(net.talaatharb.screensnapqr.constants.ModeChoice.SCREEN);
+            uiController.newQRSnap();
+        });
+
+        // The background thread swallows the exception (logging it) and still re-hides the delay label.
+        await().atMost(8, TimeUnit.SECONDS)
+                .untilAsserted(() -> Assertions.assertFalse(uiController.getDelayLabel().isVisible()));
+    }
+
+    @Test
+    void testNewQRSnapHidesAndRestoresRealMainStage() throws Exception {
+        when(captureBoundsProvider.resolveBounds(any())).thenReturn(null);
+        when(screenSnapQRFacade.getAllQRCodesFromScreen()).thenReturn(List.of());
+
+        final java.util.concurrent.atomic.AtomicReference<javafx.stage.Stage> stageRef = new java.util.concurrent.atomic.AtomicReference<>();
+        Platform.runLater(() -> {
+            final javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setScene(new javafx.scene.Scene(uiController.getDelayLabel(), 100, 100));
+            stage.show();
+            stageRef.set(stage);
+        });
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertNotNull(stageRef.get()));
+
+        Platform.runLater(() -> {
+            uiController.getDelaySpinner().getValueFactory().setValue(0);
+            uiController.getModeChoiceBox().setValue(net.talaatharb.screensnapqr.constants.ModeChoice.SCREEN);
+            uiController.newQRSnap();
+        });
+
+        await().atMost(8, TimeUnit.SECONDS)
+                .untilAsserted(() -> verify(screenSnapQRFacade).getAllQRCodesFromScreen());
+        // The real stage should end up shown/deiconified again once the capture completes.
+        await().atMost(4, TimeUnit.SECONDS)
+                .untilAsserted(() -> Assertions.assertFalse(stageRef.get().isIconified()));
+        Assertions.assertTrue(stageRef.get().isShowing());
+
+        Platform.runLater(() -> stageRef.get().close());
     }
 
 }
